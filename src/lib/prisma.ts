@@ -1,4 +1,4 @@
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import path from "path";
 
@@ -9,7 +9,9 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-const globalForPrisma = globalThis as unknown as { prisma: ReturnType<typeof createPrismaClient> };
+const globalForPrisma = globalThis as unknown as {
+  prisma: ReturnType<typeof createPrismaClient>;
+};
 
 export const prisma = globalForPrisma.prisma || createPrismaClient();
 
