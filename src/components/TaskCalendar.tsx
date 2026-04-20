@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { Todo } from "./TaskCard";
 
 interface TaskCalendarProps {
   todos: Todo[];
+  selectedDate: string | null;
+  onSelectDate: (date: string | null) => void;
 }
 
-export default function TaskCalendar({ todos }: TaskCalendarProps) {
+export default function TaskCalendar({ todos, selectedDate, onSelectDate }: TaskCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const year = currentDate.getFullYear();
@@ -19,7 +21,7 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
     const map = new Map<string, { total: number; completed: number; urgent: boolean }>();
     for (const todo of todos) {
       if (!todo.dueDate) continue;
-      const key = todo.dueDate; // already YYYY-MM-DD
+      const key = todo.dueDate;
       const entry = map.get(key) || { total: 0, completed: 0, urgent: false };
       entry.total++;
       if (todo.completed) entry.completed++;
@@ -30,7 +32,7 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
   }, [todos]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -48,6 +50,20 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  function handleClickDay(dateStr: string) {
+    if (selectedDate === dateStr) {
+      onSelectDate(null); // toggle off
+    } else {
+      onSelectDate(dateStr);
+    }
+  }
+
+  // Format selected date for display
+  function formatSelectedDate(dateStr: string) {
+    const parts = dateStr.split("-");
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
 
   return (
     <div className="bg-[var(--bgcard)] rounded-2xl p-4 shadow-md">
@@ -81,6 +97,7 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const info = taskDates.get(dateStr);
           const isToday = dateStr === todayStr;
+          const isSelected = dateStr === selectedDate;
           const allDone = info && info.total === info.completed;
 
           let dotColor = "";
@@ -91,12 +108,15 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
           }
 
           return (
-            <div
+            <button
               key={dateStr}
-              className={`relative flex flex-col items-center justify-center h-8 rounded-lg text-xs font-semibold transition
-                ${isToday
-                  ? "bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white"
-                  : "text-[var(--text)] hover:bg-[var(--subbackground)]"
+              onClick={() => handleClickDay(dateStr)}
+              className={`relative flex flex-col items-center justify-center h-8 rounded-lg text-xs font-semibold transition cursor-pointer
+                ${isSelected
+                  ? "ring-2 ring-[var(--primary)] bg-[var(--primary)]/15 text-[var(--primary)]"
+                  : isToday
+                    ? "bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white"
+                    : "text-[var(--text)] hover:bg-[var(--subbackground)]"
                 }`}
               title={info ? `${info.total} tarefa(s)${allDone ? " (todas concluídas)" : ""}` : undefined}
             >
@@ -104,10 +124,25 @@ export default function TaskCalendar({ todos }: TaskCalendarProps) {
               {info && (
                 <span className={`absolute bottom-0.5 w-1.5 h-1.5 rounded-full ${dotColor}`} />
               )}
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {/* Selected date badge */}
+      {selectedDate && (
+        <div className="flex items-center justify-between mt-3 px-2 py-1.5 rounded-full bg-[var(--primary)]/10">
+          <span className="text-xs font-bold text-[var(--primary)]">
+            Filtrando: {formatSelectedDate(selectedDate)}
+          </span>
+          <button
+            onClick={() => onSelectDate(null)}
+            className="p-0.5 rounded-full hover:bg-[var(--primary)]/20 transition"
+          >
+            <X className="w-3.5 h-3.5 text-[var(--primary)]" />
+          </button>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex items-center gap-3 mt-3 text-[10px] text-[var(--subText)]">

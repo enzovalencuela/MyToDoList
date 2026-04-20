@@ -9,7 +9,7 @@ import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { Menu, Plus, Filter, ArrowUpDown, Trash2, LogOut, User } from "lucide-react";
+import { Menu, Plus, Filter, ArrowUpDown, Trash2, LogOut, User, CalendarX2 } from "lucide-react";
 
 import TaskCard, { type Todo } from "@/components/TaskCard";
 import AddTaskForm from "@/components/AddTaskForm";
@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [filterType, setFilterType] = useState<FilterType>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -68,6 +69,11 @@ export default function DashboardPage() {
       );
     }
 
+    // Calendar date filter
+    if (selectedDate) {
+      result = result.filter((t) => t.dueDate === selectedDate);
+    }
+
     // Separate pending and completed
     const pending = result.filter((t) => !t.completed);
     const completed = result.filter((t) => t.completed);
@@ -91,7 +97,7 @@ export default function DashboardPage() {
     }
 
     setFilteredTodos([...pending, ...completed]);
-  }, [allTodos, searchTerm, filterType, sortDir]);
+  }, [allTodos, searchTerm, filterType, sortDir, selectedDate]);
 
   async function handleAddTask(task: { title: string; description?: string; priority: string; dueDate?: string }) {
     const res = await fetch("/api/todos", {
@@ -278,13 +284,13 @@ export default function DashboardPage() {
 
           {/* Calendar sidebar */}
           <div className="hidden lg:block">
-            <TaskCalendar todos={allTodos} />
+            <TaskCalendar todos={allTodos} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
         </div>
 
         {/* Mobile calendar */}
         <div className="lg:hidden mb-6">
-          <TaskCalendar todos={allTodos} />
+          <TaskCalendar todos={allTodos} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
 
         {/* Tasks */}
@@ -293,6 +299,28 @@ export default function DashboardPage() {
             <div className="text-6xl mb-4">📝</div>
             <h2 className="text-2xl font-bold gradient-text mb-2">Bora organizar sua vida!</h2>
             <p className="text-[var(--subText)]">Adicione sua primeira tarefa clicando no botão abaixo.</p>
+          </div>
+        ) : filteredTodos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <CalendarX2 className="w-16 h-16 text-[var(--subText)] mb-4" />
+            <h2 className="text-xl font-bold text-[var(--text)] mb-2">
+              Nenhuma tarefa {selectedDate ? "para este dia" : "encontrada"}
+            </h2>
+            <p className="text-[var(--subText)] text-sm mb-4">
+              {selectedDate
+                ? `Não há tarefas com prazo em ${selectedDate.split("-").reverse().join("/")}.`
+                : "Tente ajustar os filtros ou o termo de busca."}
+            </p>
+            {selectedDate && (
+              <button
+                onClick={() => setSelectedDate(null)}
+                className="px-5 py-2 rounded-full text-sm font-bold text-white
+                  bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]
+                  hover:-translate-y-0.5 hover:shadow-lg transition-all"
+              >
+                Limpar filtro de data
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
