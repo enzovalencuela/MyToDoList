@@ -1,26 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #3b005e;
+  --secondary: #634982;
+  --background: #fef7dd;
+  --background-2: #faf4dd;
+  --subbackground: #e3e3e3;
+  --bgcard: #fff8e9;
+  --text: #3b005e;
+  --subText: #58157e;
+  --button: #392a33;
+  --buttonRed: #ff0000;
+  --taskcompleted: #c6c6c6;
+  --foreground: #3b005e;
+}
+
+[data-theme="dark"] {
+  --primary: #0083dd;
+  --secondary: #00c9b7;
+  --background: #1e2939;
+  --background-2: #243347;
+  --subbackground: #121b2a;
+  --bgcard: #121b2a;
+  --text: #dcdcdc;
+  --subText: #6c6c6c;
+  --button: #392a33;
+  --buttonRed: #ff4444;
+  --taskcompleted: #555555;
+  --foreground: #dcdcdc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: 'Dosis', Arial, Helvetica, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--subbackground);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 4px;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

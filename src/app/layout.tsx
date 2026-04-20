@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "My Todo List",
@@ -19,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-gray-50">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className="min-h-screen">
         <Providers>{children}</Providers>
       </body>
     </html>
