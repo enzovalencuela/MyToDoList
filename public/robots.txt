@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /settings
+
+Sitemap: https://nexgen-tasks.vercel.app/sitemap.xml
