@@ -200,13 +200,13 @@ export default function DashboardPage() {
   const completedTodos = filteredTodos.filter((t) => t.completed);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--background)] lg:bg-[radial-gradient(circle_at_top,#ffffff_0%,var(--background-2)_28%,var(--background)_65%)] dark:lg:bg-[radial-gradient(circle_at_top,#25354b_0%,#1d2a3b_30%,var(--background)_68%)]">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
       {/* Navbar */}
-      <header className="sticky top-0 z-30 border-b border-[var(--subbackground)] bg-[var(--background)]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/85 backdrop-blur-lg lg:ml-[290px]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
+          <div className="flex items-center gap-2 lg:hidden">
             <NexgenLogo variant="icon" className="w-8 h-8" />
             <h1 className="text-2xl font-bold gradient-text">Nexgen Tasks</h1>
           </div>
@@ -219,10 +219,14 @@ export default function DashboardPage() {
               )}
               <span>Olá, {session?.user?.name || session?.user?.email?.split("@")[0]}</span>
             </div>
+            <div className="hidden lg:block">
+              <p className="text-xs uppercase tracking-[0.24em] text-[var(--subText)]">Dashboard</p>
+              <p className="text-sm font-bold text-[var(--text)]">Sua central de tarefas</p>
+            </div>
             <ThemeSwitch />
             <button
               onClick={() => setShowSidebar(true)}
-              className="p-2 rounded-full hover:bg-[var(--subbackground)] transition"
+              className="rounded-full p-2 transition hover:bg-[var(--subbackground)] lg:hidden"
             >
               <Menu className="w-6 h-6 text-[var(--text)]" />
             </button>
@@ -232,7 +236,7 @@ export default function DashboardPage() {
 
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
         {/* Calendar + Search row */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
           <div className="space-y-6">

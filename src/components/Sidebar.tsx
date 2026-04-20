@@ -1,10 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { X, User, Settings, LogOut, HelpCircle, Info } from "lucide-react";
 import ThemeSwitch from "./ThemeSwitch";
+import NexgenLogo from "./NexgenLogo";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,6 +15,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
 
   const navItems = [
     { label: "Perfil", href: "/profile", icon: User },
@@ -21,80 +24,107 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: "Ajuda", href: "/help", icon: HelpCircle },
   ];
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black z-40 lg:hidden"
-            onClick={onClose}
-          />
-
-          {/* Sidebar */}
-          <motion.aside
-            initial={{ x: 320 }}
-            animate={{ x: 0 }}
-            exit={{ x: 320 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="fixed right-0 top-0 h-full w-[280px] z-50 flex flex-col
-              bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] text-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between p-4">
-              <span className="text-lg font-bold">Menu</span>
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-white/20 transition">
-                <X className="w-6 h-6" />
-              </button>
+  function SidebarContent({ mobile = false }: { mobile?: boolean }) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between p-5">
+          <div className="flex items-center gap-3">
+            <NexgenLogo variant="icon" className="h-9 w-9" />
+            <div>
+              <p className="text-sm font-bold text-white">Nexgen Tasks</p>
+              <p className="text-xs text-white/60">Organize melhor seu dia</p>
             </div>
+          </div>
+          {mobile && (
+            <button onClick={onClose} className="rounded-full p-1 text-white hover:bg-white/10 transition">
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
 
-            {/* Profile */}
-            <div className="flex flex-col items-center gap-2 py-6 border-b border-white/20">
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-                {session?.user?.image ? (
-                  <img src={session.user.image} alt="avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-8 h-8" />
-                )}
-              </div>
-              <span className="font-semibold text-sm">
-                {session?.user?.name || session?.user?.email}
-              </span>
+        <div className="mx-4 rounded-3xl border border-white/10 bg-white/8 px-4 py-5 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/12 text-white">
+              {session?.user?.image ? (
+                <img src={session.user.image} alt="avatar" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-7 w-7" />
+              )}
             </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-white">
+                {session?.user?.name || "Usuário"}
+              </p>
+              <p className="truncate text-xs text-white/65">{session?.user?.email}</p>
+            </div>
+          </div>
+        </div>
 
-            {/* Nav items */}
-            <nav className="flex-1 p-4 space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-full transition-all
-                    hover:bg-[var(--background-2)] hover:text-[var(--primary)] group"
-                >
-                  <item.icon className="w-5 h-5 group-hover:text-[var(--primary)]" />
-                  <span className="font-medium group-hover:gradient-text">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-white/20 space-y-2">
-              <ThemeSwitch />
-              <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="flex items-center gap-3 px-4 py-3 rounded-full w-full
-                  hover:bg-red-500/20 transition-all text-red-200 hover:text-red-100"
+        <nav className="flex-1 px-4 py-5 space-y-2">
+          {navItems.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={mobile ? onClose : undefined}
+                className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+                  active
+                    ? "bg-white text-[var(--primary)] shadow-lg"
+                    : "text-white/85 hover:bg-white/12 hover:text-white"
+                }`}
               >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sair</span>
-              </button>
-            </div>
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+                <item.icon className={`h-5 w-5 ${active ? "text-[var(--primary)]" : "text-white/75 group-hover:text-white"}`} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-white/10 p-4 space-y-3">
+          <div className="rounded-2xl bg-white/8 px-2 py-2 text-white">
+            <ThemeSwitch />
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-red-100 transition-all hover:bg-red-500/15 hover:text-white"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Sair</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-[290px] lg:border-r lg:border-white/6 lg:bg-gradient-to-b lg:from-[#26103d] lg:via-[#342052] lg:to-[#4b3470] lg:shadow-2xl">
+        <SidebarContent />
+      </aside>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.45 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black lg:hidden"
+              onClick={onClose}
+            />
+            <motion.aside
+              initial={{ x: 320 }}
+              animate={{ x: 0 }}
+              exit={{ x: 320 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              className="fixed right-0 top-0 z-50 h-full w-[290px] bg-gradient-to-b from-[#26103d] via-[#342052] to-[#4b3470] shadow-2xl lg:hidden"
+            >
+              <SidebarContent mobile />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

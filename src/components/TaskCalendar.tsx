@@ -66,7 +66,7 @@ export default function TaskCalendar({ todos, selectedDate, onSelectDate }: Task
   }
 
   return (
-    <div className="bg-[var(--bgcard)] rounded-2xl p-4 shadow-md">
+    <div className="rounded-3xl border border-white/40 bg-[var(--bgcard)]/92 p-4 shadow-[0_24px_60px_rgba(30,41,57,0.08)] backdrop-blur-sm dark:border-white/6 dark:shadow-[0_24px_60px_rgba(0,0,0,0.22)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <button onClick={prevMonth} className="p-1.5 rounded-full hover:bg-[var(--subbackground)] transition">

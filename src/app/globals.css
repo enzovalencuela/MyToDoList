@@ -43,6 +43,11 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
+#__next,
+main {
+  min-height: 100%;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
