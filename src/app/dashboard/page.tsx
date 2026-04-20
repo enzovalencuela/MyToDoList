@@ -18,6 +18,7 @@ import InputSearch from "@/components/InputSearch";
 import Sidebar from "@/components/Sidebar";
 import ThemeSwitch from "@/components/ThemeSwitch";
 import TaskCalendar from "@/components/TaskCalendar";
+import NexgenLogo from "@/components/NexgenLogo";
 
 type FilterType = "priority" | "date" | "title" | null;
 type SortDir = "asc" | "desc";
@@ -200,7 +201,7 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-30 border-b border-[var(--subbackground)] bg-[var(--background)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <img src="/nexgen-logo-icon.png" alt="" className="w-8 h-8" />
+            <NexgenLogo variant="icon" className="w-8 h-8" />
             <h1 className="text-2xl font-bold gradient-text">Nexgen Tasks</h1>
           </div>
           <div className="flex items-center gap-3">
