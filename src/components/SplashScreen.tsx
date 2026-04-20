@@ -8,19 +8,18 @@ interface SplashScreenProps {
 }
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const [phase, setPhase] = useState<"logo" | "text" | "exit">("logo");
+  const [phase, setPhase] = useState<"icon" | "full" | "exit">("icon");
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Read theme from localStorage (same key next-themes uses)
     const saved = localStorage.getItem("theme");
     setIsDark(saved === "dark");
   }, []);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("text"), 600);
-    const t2 = setTimeout(() => setPhase("exit"), 2200);
-    const t3 = setTimeout(() => onFinish(), 2800);
+    const t1 = setTimeout(() => setPhase("full"), 1200);
+    const t2 = setTimeout(() => setPhase("exit"), 2800);
+    const t3 = setTimeout(() => onFinish(), 3400);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onFinish]);
 
@@ -41,51 +40,66 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
               : "bg-gradient-to-br from-[var(--primary)] via-[#6c3bd5] to-[var(--secondary)]"
             }`}
         >
-          {/* Glow effect */}
+          {/* Glow */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
               w-[600px] h-[600px] rounded-full bg-white/5 blur-3xl animate-pulse" />
           </div>
 
-          {/* Logo icon */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
-            className="relative z-10 mb-6"
-          >
-            <img
-              src={iconSrc}
-              alt="Nexgen"
-              className="w-24 h-24 drop-shadow-2xl"
-            />
-          </motion.div>
+          {/* Logo area - single spot, swap between icon and full */}
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="relative w-24 h-24 mb-6">
+              <AnimatePresence mode="wait">
+                {phase === "icon" ? (
+                  <motion.img
+                    key="icon"
+                    src={iconSrc}
+                    alt="Nexgen"
+                    initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0, rotate: 90 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="w-24 h-24 drop-shadow-2xl absolute inset-0"
+                  />
+                ) : (
+                  <motion.img
+                    key="full"
+                    src={fullSrc}
+                    alt="Nexgen"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 180, damping: 14 }}
+                    className="h-24 drop-shadow-2xl absolute inset-0 object-contain"
+                  />
+                )}
+              </AnimatePresence>
+            </div>
 
-          {/* Full logo / Text */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={phase === "text" ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative z-10 flex flex-col items-center"
-          >
-            <img
-              src={fullSrc}
-              alt="Nexgen"
-              className="h-10 mb-3 drop-shadow-lg"
-            />
-            <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
-              Nexgen Tasks
-            </h1>
-            <p className="mt-2 text-white/70 text-sm font-medium">
-              Organize. Priorize. Conquiste.
-            </p>
-          </motion.div>
+            {/* Text - appears with full logo */}
+            <AnimatePresence>
+              {phase === "full" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                  className="flex flex-col items-center"
+                >
+                  <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+                    Nexgen Tasks
+                  </h1>
+                  <p className="mt-2 text-white/70 text-sm font-medium">
+                    Organize. Priorize. Conquiste.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Loading dots */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 0.8 }}
             className="relative z-10 mt-10 flex gap-2"
           >
             {[0, 1, 2].map((i) => (
