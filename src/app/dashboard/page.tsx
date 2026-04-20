@@ -200,28 +200,24 @@ export default function DashboardPage() {
   const completedTodos = filteredTodos.filter((t) => t.completed);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] lg:bg-[radial-gradient(circle_at_top,#fbf5e8_0%,var(--background-2)_24%,var(--background)_62%)] dark:lg:bg-[radial-gradient(circle_at_top,#25354b_0%,#1d2a3b_30%,var(--background)_68%)]">
+    <div className="min-h-screen bg-[var(--background)]">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
       {/* Navbar */}
-      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:ml-[290px]">
+      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/92 backdrop-blur-lg lg:ml-[290px]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <div className="flex items-center gap-2 lg:hidden">
             <NexgenLogo variant="icon" className="w-8 h-8" />
             <h1 className="text-2xl font-bold gradient-text">Nexgen Tasks</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--subText)]">
+            <div className="flex items-center gap-2 text-sm text-[var(--subText)] lg:hidden">
               {session?.user?.image ? (
                 <img src={session.user.image} alt="" className="w-7 h-7 rounded-full" />
               ) : (
                 <User className="w-5 h-5" />
               )}
               <span>Olá, {session?.user?.name || session?.user?.email?.split("@")[0]}</span>
-            </div>
-            <div className="hidden lg:block">
-              <p className="text-xs uppercase tracking-[0.24em] text-[var(--subText)]">Dashboard</p>
-              <p className="text-sm font-bold text-[var(--text)]">Sua central de tarefas</p>
             </div>
             <ThemeSwitch />
             <button
