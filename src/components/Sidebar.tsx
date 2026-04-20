@@ -31,20 +31,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="flex items-center gap-3">
             <NexgenLogo variant="icon" className="h-9 w-9" />
             <div>
-              <p className="text-sm font-bold text-white">Nexgen Tasks</p>
-              <p className="text-xs text-white/60">Organize melhor seu dia</p>
+              <p className="text-sm font-bold text-[var(--text)]">Nexgen Tasks</p>
+              <p className="text-xs text-[var(--subText)]">Organize melhor seu dia</p>
             </div>
           </div>
           {mobile && (
-            <button onClick={onClose} className="rounded-full p-1 text-white hover:bg-white/10 transition">
+            <button onClick={onClose} className="rounded-full p-1 text-[var(--text)] hover:bg-[var(--subbackground)] transition">
               <X className="h-5 w-5" />
             </button>
           )}
         </div>
 
-        <div className="mx-4 rounded-3xl border border-white/10 bg-white/8 px-4 py-5 backdrop-blur-sm">
+        <div className="mx-4 rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/12 text-white">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[var(--subbackground)] text-[var(--text)]">
               {session?.user?.image ? (
                 <img src={session.user.image} alt="avatar" className="h-full w-full object-cover" />
               ) : (
@@ -52,10 +52,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-white">
+              <p className="truncate text-sm font-bold text-[var(--text)]">
                 {session?.user?.name || "Usuário"}
               </p>
-              <p className="truncate text-xs text-white/65">{session?.user?.email}</p>
+              <p className="truncate text-xs text-[var(--subText)]">{session?.user?.email}</p>
             </div>
           </div>
         </div>
@@ -70,24 +70,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={mobile ? onClose : undefined}
                 className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
                   active
-                    ? "bg-white text-[var(--primary)] shadow-lg"
-                    : "text-white/85 hover:bg-white/12 hover:text-white"
+                    ? "bg-[var(--subbackground)] text-[var(--primary)] shadow-sm"
+                    : "text-[var(--text)] hover:bg-[var(--subbackground)]"
                 }`}
               >
-                <item.icon className={`h-5 w-5 ${active ? "text-[var(--primary)]" : "text-white/75 group-hover:text-white"}`} />
+                <item.icon className={`h-5 w-5 ${active ? "text-[var(--primary)]" : "text-[var(--subText)] group-hover:text-[var(--text)]"}`} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-4 space-y-3">
-          <div className="rounded-2xl bg-white/8 px-2 py-2 text-white">
+        <div className="border-t border-[var(--subbackground)] p-4 space-y-3">
+          <div className="rounded-2xl bg-[var(--background)] px-2 py-2 text-[var(--text)]">
             <ThemeSwitch />
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-red-100 transition-all hover:bg-red-500/15 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
           >
             <LogOut className="h-5 w-5" />
             <span>Sair</span>
@@ -99,7 +99,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-[290px] lg:border-r lg:border-white/6 lg:bg-gradient-to-b lg:from-[#26103d] lg:via-[#342052] lg:to-[#4b3470] lg:shadow-2xl">
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-[290px] lg:border-r lg:border-[var(--subbackground)] lg:bg-[var(--bgcard)] lg:shadow-xl">
         <SidebarContent />
       </aside>
 
@@ -118,7 +118,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               animate={{ x: 0 }}
               exit={{ x: 320 }}
               transition={{ type: "spring", stiffness: 260, damping: 22 }}
-              className="fixed right-0 top-0 z-50 h-full w-[290px] bg-gradient-to-b from-[#26103d] via-[#342052] to-[#4b3470] shadow-2xl lg:hidden"
+              className="fixed right-0 top-0 z-50 h-full w-[290px] bg-[var(--bgcard)] shadow-2xl lg:hidden"
             >
               <SidebarContent mobile />
             </motion.aside>

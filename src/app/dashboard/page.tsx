@@ -200,11 +200,11 @@ export default function DashboardPage() {
   const completedTodos = filteredTodos.filter((t) => t.completed);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] lg:bg-[radial-gradient(circle_at_top,#ffffff_0%,var(--background-2)_28%,var(--background)_65%)] dark:lg:bg-[radial-gradient(circle_at_top,#25354b_0%,#1d2a3b_30%,var(--background)_68%)]">
+    <div className="min-h-screen bg-[var(--background)] lg:bg-[radial-gradient(circle_at_top,#fbf5e8_0%,var(--background-2)_24%,var(--background)_62%)] dark:lg:bg-[radial-gradient(circle_at_top,#25354b_0%,#1d2a3b_30%,var(--background)_68%)]">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
       {/* Navbar */}
-      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/85 backdrop-blur-lg lg:ml-[290px]">
+      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:ml-[290px]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <div className="flex items-center gap-2 lg:hidden">
             <NexgenLogo variant="icon" className="w-8 h-8" />
