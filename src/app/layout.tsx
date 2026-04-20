@@ -3,8 +3,8 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 
 export const metadata: Metadata = {
-  title: "My Todo List",
-  description: "Gerencie suas tarefas",
+  title: "Nexgen Tasks",
+  description: "Gerencie suas tarefas com inteligência",
 };
 
 export default function RootLayout({

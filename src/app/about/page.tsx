@@ -13,7 +13,7 @@ export default function AboutPage() {
 
       <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md space-y-4">
         <p className="text-[var(--text)] font-medium">
-          <strong>My Todo List</strong> é um gerenciador de tarefas moderno, construído com:
+          <strong>Nexgen Tasks</strong> é um gerenciador de tarefas moderno, construído com:
         </p>
         <ul className="list-disc pl-6 text-[var(--subText)] space-y-1 text-sm">
           <li>Next.js 16 + TypeScript</li>

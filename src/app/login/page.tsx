@@ -37,7 +37,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold gradient-text">My Todo List</h1>
+          <img src="/nexgen-logo-icon.png" alt="Nexgen" className="w-16 h-16 mx-auto mb-3 drop-shadow-lg" />
+          <h1 className="text-4xl font-bold gradient-text">Nexgen Tasks</h1>
           <p className="mt-2 text-[var(--subText)] font-medium">Entre na sua conta</p>
         </div>
 
