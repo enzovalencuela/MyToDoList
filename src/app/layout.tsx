@@ -93,6 +93,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-5TNK5D9FDK" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-5TNK5D9FDK');`,
+          }}
+        />
+
+        {/* Google Search Console */}
+        <meta name="google-site-verification" content="oK_JHebRSmKGBc-6v3wO2Jb7Cdgg7Cx9tesvePaZs2c" />
+
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
