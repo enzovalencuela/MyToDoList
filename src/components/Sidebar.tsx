@@ -15,6 +15,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { data: session } = useSession();
 
   const navItems = [
+    { label: "Perfil", href: "/profile", icon: User },
     { label: "Configurações", href: "/settings", icon: Settings },
     { label: "Sobre", href: "/about", icon: Info },
     { label: "Ajuda", href: "/help", icon: HelpCircle },

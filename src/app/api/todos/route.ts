@@ -36,7 +36,7 @@ export async function GET() {
     description: t.descricao,
     completed: t.estado_tarefa === "Finalizada",
     priority: t.prioridade,
-    dueDate: t.data_prazo?.toISOString() ?? null,
+    dueDate: t.data_prazo ? t.data_prazo.toISOString().split("T")[0] : null,
     order: t.ordem,
     createdAt: "",
   }));

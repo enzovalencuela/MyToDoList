@@ -17,6 +17,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import InputSearch from "@/components/InputSearch";
 import Sidebar from "@/components/Sidebar";
 import ThemeSwitch from "@/components/ThemeSwitch";
+import TaskCalendar from "@/components/TaskCalendar";
 
 type FilterType = "priority" | "date" | "title" | null;
 type SortDir = "asc" | "desc";
@@ -222,8 +223,11 @@ export default function DashboardPage() {
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* Search + Filters bar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-6">
+        {/* Calendar + Search row */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
+          <div className="space-y-6">
+            {/* Search + Filters bar */}
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <InputSearch onSearch={setSearchTerm} />
 
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -265,6 +269,18 @@ export default function DashboardPage() {
               </button>
             )}
           </div>
+            </div>
+          </div>
+
+          {/* Calendar sidebar */}
+          <div className="hidden lg:block">
+            <TaskCalendar todos={allTodos} />
+          </div>
+        </div>
+
+        {/* Mobile calendar */}
+        <div className="lg:hidden mb-6">
+          <TaskCalendar todos={allTodos} />
         </div>
 
         {/* Tasks */}
