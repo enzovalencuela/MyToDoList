@@ -16,7 +16,6 @@ import AddTaskForm from "@/components/AddTaskForm";
 import ConfirmModal from "@/components/ConfirmModal";
 import InputSearch from "@/components/InputSearch";
 import Sidebar from "@/components/Sidebar";
-import ThemeSwitch from "@/components/ThemeSwitch";
 import TaskCalendar from "@/components/TaskCalendar";
 import NexgenLogo from "@/components/NexgenLogo";
 
@@ -204,14 +203,14 @@ export default function DashboardPage() {
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
       {/* Navbar */}
-      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/92 backdrop-blur-lg lg:ml-[290px]">
+      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/92 backdrop-blur-lg lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex min-w-0 items-center gap-2">
             <NexgenLogo variant="icon" className="w-8 h-8" />
-            <h1 className="text-2xl font-bold gradient-text">Nexgen Tasks</h1>
+            <h1 className="truncate text-lg font-bold gradient-text sm:text-xl">Nexgen Tasks</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-[var(--subText)] lg:hidden">
+            <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
               {session?.user?.image ? (
                 <img src={session.user.image} alt="" className="w-7 h-7 rounded-full" />
               ) : (
@@ -219,7 +218,6 @@ export default function DashboardPage() {
               )}
               <span>Olá, {session?.user?.name || session?.user?.email?.split("@")[0]}</span>
             </div>
-            <ThemeSwitch />
             <button
               onClick={() => setShowSidebar(true)}
               className="rounded-full p-2 transition hover:bg-[var(--subbackground)] lg:hidden"
@@ -232,7 +230,7 @@ export default function DashboardPage() {
 
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
-      <main className="mx-auto max-w-7xl px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 lg:ml-[290px] lg:px-8 lg:pt-8 lg:pb-8">
         {/* Calendar + Search row */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
           <div className="space-y-6">
