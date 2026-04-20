@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SplashScreenProps {
@@ -9,12 +9,6 @@ interface SplashScreenProps {
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
   const [phase, setPhase] = useState<"icon" | "full" | "exit">("icon");
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    setIsDark(saved === "dark");
-  }, []);
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("full"), 1200);
@@ -23,8 +17,8 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onFinish]);
 
-  const iconSrc = isDark ? "/nexgen-logo-icon_dark.png" : "/nexgen-logo-icon.png";
-  const fullSrc = isDark ? "/nexgen-logo-icon-full_dark.png" : "/nexgen-logo-icon-full.png";
+  const iconSrc = "/nexgen-logo-icon.png";
+  const fullSrc = "/nexgen-logo-icon-full.png";
 
   return (
     <AnimatePresence>
@@ -34,11 +28,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
-          className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center
-            ${isDark
-              ? "bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]"
-              : "bg-gradient-to-br from-[var(--primary)] via-[#6c3bd5] to-[var(--secondary)]"
-            }`}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#1f2937]"
         >
           {/* Glow */}
           <div className="absolute inset-0 overflow-hidden">

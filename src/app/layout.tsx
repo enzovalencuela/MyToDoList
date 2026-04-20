@@ -73,9 +73,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/LOGO_ICO.ico", sizes: "any" },
       { url: "/nexgen-logo-icon.png", type: "image/png", sizes: "192x192" },
     ],
+    shortcut: [{ url: "/LOGO_ICO.ico" }],
     apple: [{ url: "/nexgen-logo-icon.png", sizes: "180x180" }],
   },
   manifest: "/manifest.json",
