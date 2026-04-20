@@ -5,10 +5,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE() {
   const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.email) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const userId = (session.user as { id: string }).id;
+  const usuario = await prisma.usuario.findUnique({ where: { email: session.user.email } });
+  if (!usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  await prisma.todo.deleteMany({ where: { userId, completed: true } });
+  await prisma.tarefa.deleteMany({
+    where: { id_usuario: usuario.id_usuario, estado_tarefa: "Finalizada" },
+  });
+
   return NextResponse.json({ success: true });
 }

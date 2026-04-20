@@ -3,80 +3,114 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+async function getUsuarioId(): Promise<number | null> {
   const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.email) return null;
 
-  const userId = (session.user as { id: string }).id;
-  const todos = await prisma.todo.findMany({
-    where: { userId },
-    orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+  // Find or create usuario by email
+  let usuario = await prisma.usuario.findUnique({ where: { email: session.user.email } });
+  if (!usuario) {
+    usuario = await prisma.usuario.create({
+      data: {
+        email: session.user.email,
+        name: session.user.name ?? null,
+      },
+    });
+  }
+  return usuario.id_usuario;
+}
+
+export async function GET() {
+  const id_usuario = await getUsuarioId();
+  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const tarefas = await prisma.tarefa.findMany({
+    where: { id_usuario },
+    orderBy: [{ ordem: "asc" }],
   });
+
+  // Map to frontend format
+  const todos = tarefas.map((t) => ({
+    id: String(t.id_tarefa),
+    title: t.titulo,
+    description: t.descricao,
+    completed: t.estado_tarefa === "Finalizada",
+    priority: t.prioridade,
+    dueDate: t.data_prazo?.toISOString() ?? null,
+    order: t.ordem,
+    createdAt: "",
+  }));
 
   return NextResponse.json(todos);
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const id_usuario = await getUsuarioId();
+  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const userId = (session.user as { id: string }).id;
   const { title, description, priority, dueDate } = await req.json();
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Título é obrigatório" }, { status: 400 });
   }
 
-  const maxOrder = await prisma.todo.aggregate({ where: { userId }, _max: { order: true } });
-  const nextOrder = (maxOrder._max.order ?? -1) + 1;
+  const maxOrdem = await prisma.tarefa.aggregate({ where: { id_usuario }, _max: { ordem: true } });
+  const nextOrdem = (maxOrdem._max.ordem ?? -1) + 1;
 
-  const todo = await prisma.todo.create({
+  const tarefa = await prisma.tarefa.create({
     data: {
-      title,
-      description: description || null,
-      priority: priority || "Normal",
-      dueDate: dueDate ? new Date(dueDate) : null,
-      order: nextOrder,
-      userId,
+      titulo: title,
+      descricao: description || null,
+      prioridade: priority || "Normal",
+      data_prazo: dueDate ? new Date(dueDate) : null,
+      estado_tarefa: "Pendente",
+      ordem: nextOrdem,
+      id_usuario,
     },
   });
 
-  return NextResponse.json(todo, { status: 201 });
+  return NextResponse.json({
+    id: String(tarefa.id_tarefa),
+    title: tarefa.titulo,
+    description: tarefa.descricao,
+    completed: false,
+    priority: tarefa.prioridade,
+    dueDate: tarefa.data_prazo?.toISOString() ?? null,
+    order: tarefa.ordem,
+  }, { status: 201 });
 }
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const id_usuario = await getUsuarioId();
+  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const userId = (session.user as { id: string }).id;
   const { id, completed, title, description, priority, dueDate } = await req.json();
 
   if (!id) return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
-  if (completed !== undefined) data.completed = completed;
-  if (title !== undefined) data.title = title;
-  if (description !== undefined) data.description = description;
-  if (priority !== undefined) data.priority = priority;
-  if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
+  if (completed !== undefined) data.estado_tarefa = completed ? "Finalizada" : "Pendente";
+  if (title !== undefined) data.titulo = title;
+  if (description !== undefined) data.descricao = description;
+  if (priority !== undefined) data.prioridade = priority;
+  if (dueDate !== undefined) data.data_prazo = dueDate ? new Date(dueDate) : null;
 
-  const result = await prisma.todo.updateMany({
-    where: { id, userId },
+  const result = await prisma.tarefa.updateMany({
+    where: { id_tarefa: Number(id), id_usuario },
     data,
   });
 
-  if (result.count === 0) return NextResponse.json({ error: "Todo não encontrado" }, { status: 404 });
+  if (result.count === 0) return NextResponse.json({ error: "Tarefa não encontrada" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const id_usuario = await getUsuarioId();
+  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const userId = (session.user as { id: string }).id;
   const { id } = await req.json();
 
-  await prisma.todo.deleteMany({ where: { id, userId } });
+  await prisma.tarefa.deleteMany({ where: { id_tarefa: Number(id), id_usuario } });
   return NextResponse.json({ success: true });
 }

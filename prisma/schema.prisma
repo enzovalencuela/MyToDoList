@@ -7,6 +7,36 @@ datasource db {
   provider = "postgresql"
 }
 
+// ========== TABELAS EXISTENTES (somente leitura, não alterar) ==========
+
+model Usuario {
+  id_usuario   Int       @id @default(autoincrement())
+  name         String?
+  email        String    @unique
+  firebase_uid String?   @unique
+  foto_perfil  String?
+  data_criacao DateTime? @default(now())
+  tarefas      Tarefa[]
+
+  @@map("usuario")
+}
+
+model Tarefa {
+  id_tarefa     Int       @id @default(autoincrement())
+  titulo        String
+  descricao     String?
+  data_prazo    DateTime? @db.Date
+  prioridade    String    @default("Normal")
+  estado_tarefa String    @default("Pendente")
+  ordem         Int       @default(0)
+  id_usuario    Int
+  usuario       Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("tarefa")
+}
+
+// ========== TABELAS NOVAS (NextAuth) ==========
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -16,9 +46,10 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
-  todos         Todo[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@map("next_auth_user")
 }
 
 model Account {
@@ -37,6 +68,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("next_auth_account")
 }
 
 model Session {
@@ -45,6 +77,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("next_auth_session")
 }
 
 model VerificationToken {
@@ -53,18 +87,5 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-model Todo {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  completed   Boolean   @default(false)
-  priority    String    @default("Normal")
-  dueDate     DateTime?
-  order       Int       @default(0)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  @@map("next_auth_verification_token")
 }
