@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between p-5">
           <div className="flex items-center gap-3">
-            <NexgenLogo variant="icon" className="h-9 w-9" />
+            <NexgenLogo className="h-9 w-9" />
             <div>
               <p className="text-sm font-bold text-[var(--text)]">Nexgen Tasks</p>
               <p className="text-xs text-[var(--subText)]">Organize melhor seu dia</p>

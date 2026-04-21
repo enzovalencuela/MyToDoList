@@ -206,7 +206,7 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/92 backdrop-blur-lg lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
-            <NexgenLogo variant="icon" className="w-8 h-8" />
+            <NexgenLogo className="w-8 h-8" />
             <h1 className="truncate text-lg font-bold gradient-text sm:text-xl">Nexgen Tasks</h1>
           </div>
           <div className="flex items-center gap-3">

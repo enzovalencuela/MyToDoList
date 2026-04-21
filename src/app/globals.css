@@ -2,33 +2,33 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #3b005e;
-  --secondary: #634982;
-  --background: #fef7dd;
-  --background-2: #faf4dd;
-  --subbackground: #e3e3e3;
-  --bgcard: #fff8e9;
-  --text: #3b005e;
-  --subText: #58157e;
-  --button: #392a33;
+  --primary: #008eea;
+  --secondary: #4bb9ff;
+  --background: #f4faff;
+  --background-2: #eaf5ff;
+  --subbackground: #d8e6f3;
+  --bgcard: #ffffff;
+  --text: #0f2740;
+  --subText: #4c6a85;
+  --button: #17466c;
   --buttonRed: #ff0000;
-  --taskcompleted: #c6c6c6;
-  --foreground: #3b005e;
+  --taskcompleted: #c9d7e3;
+  --foreground: #0f2740;
 }
 
 [data-theme="dark"] {
-  --primary: #0083dd;
-  --secondary: #00c9b7;
-  --background: #1e2939;
-  --background-2: #243347;
-  --subbackground: #121b2a;
-  --bgcard: #121b2a;
-  --text: #dcdcdc;
-  --subText: #6c6c6c;
-  --button: #392a33;
+  --primary: #0aa2ff;
+  --secondary: #4bb9ff;
+  --background: #0f1c2b;
+  --background-2: #16283d;
+  --subbackground: #1f3349;
+  --bgcard: #142335;
+  --text: #e9f4ff;
+  --subText: #8ba8c2;
+  --button: #17466c;
   --buttonRed: #ff4444;
-  --taskcompleted: #555555;
-  --foreground: #dcdcdc;
+  --taskcompleted: #31465d;
+  --foreground: #e9f4ff;
 }
 
 @theme inline {
