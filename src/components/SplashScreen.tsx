@@ -8,17 +8,14 @@ interface SplashScreenProps {
 }
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const [phase, setPhase] = useState<"icon" | "full" | "exit">("icon");
+  const [phase, setPhase] = useState<"title" | "subtitle" | "exit">("title");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("full"), 1200);
-    const t2 = setTimeout(() => setPhase("exit"), 2800);
-    const t3 = setTimeout(() => onFinish(), 3400);
+    const t1 = setTimeout(() => setPhase("subtitle"), 900);
+    const t2 = setTimeout(() => setPhase("exit"), 2500);
+    const t3 = setTimeout(() => onFinish(), 3100);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onFinish]);
-
-  const iconSrc = "/nexgen-logo-icon.png";
-  const fullSrc = "/nexgen-logo-icon-full.png";
 
   return (
     <AnimatePresence>
@@ -36,47 +33,30 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
               w-[600px] h-[600px] rounded-full bg-white/5 blur-3xl animate-pulse" />
           </div>
 
-          {/* Logo area - single spot, swap between icon and full */}
           <div className="relative z-10 flex flex-col items-center">
-            <div className="relative w-24 h-24 mb-6">
-              <AnimatePresence mode="wait">
-                {phase === "icon" ? (
-                  <motion.img
-                    key="icon"
-                    src={iconSrc}
-                    alt="Nexgen"
-                    initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0, rotate: 90 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="w-24 h-24 drop-shadow-2xl absolute inset-0"
-                  />
-                ) : (
-                  <motion.img
-                    key="full"
-                    src={fullSrc}
-                    alt="Nexgen"
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 180, damping: 14 }}
-                    className="h-24 drop-shadow-2xl absolute inset-0 object-contain"
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Text - appears with full logo */}
             <AnimatePresence>
-              {phase === "full" && (
+              <motion.div
+                key="title"
+                initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                className="flex flex-col items-center"
+              >
+                <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg sm:text-5xl">
+                  Nexgen Tasks
+                </h1>
+              </motion.div>
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {phase === "subtitle" && (
                 <motion.div
+                  key="subtitle"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
                   className="flex flex-col items-center"
                 >
-                  <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
-                    Nexgen Tasks
-                  </h1>
                   <p className="mt-2 text-white/70 text-sm font-medium">
                     Organize. Priorize. Conquiste.
                   </p>
