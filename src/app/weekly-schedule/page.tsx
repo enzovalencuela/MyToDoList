@@ -27,18 +27,42 @@ import {
   timeToMinutes,
   type WeeklyTaskItem,
   type WeeklyTaskPayload,
-} from "@/lib/weekly-schedule";
+} from "@/lib/agenda";
 
 const PIXELS_PER_MINUTE = 1.15;
 const GRID_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
 const palette = [
-  { background: "rgba(0, 142, 234, 0.16)", border: "rgba(0, 142, 234, 0.38)", accent: "#008eea" },
-  { background: "rgba(20, 184, 166, 0.16)", border: "rgba(20, 184, 166, 0.38)", accent: "#0f766e" },
-  { background: "rgba(249, 115, 22, 0.16)", border: "rgba(249, 115, 22, 0.38)", accent: "#ea580c" },
-  { background: "rgba(236, 72, 153, 0.16)", border: "rgba(236, 72, 153, 0.38)", accent: "#db2777" },
-  { background: "rgba(139, 92, 246, 0.16)", border: "rgba(139, 92, 246, 0.38)", accent: "#7c3aed" },
-  { background: "rgba(132, 204, 22, 0.16)", border: "rgba(132, 204, 22, 0.38)", accent: "#4d7c0f" },
+  {
+    background: "rgba(0, 142, 234, 0.16)",
+    border: "rgba(0, 142, 234, 0.38)",
+    accent: "#008eea",
+  },
+  {
+    background: "rgba(20, 184, 166, 0.16)",
+    border: "rgba(20, 184, 166, 0.38)",
+    accent: "#0f766e",
+  },
+  {
+    background: "rgba(249, 115, 22, 0.16)",
+    border: "rgba(249, 115, 22, 0.38)",
+    accent: "#ea580c",
+  },
+  {
+    background: "rgba(236, 72, 153, 0.16)",
+    border: "rgba(236, 72, 153, 0.38)",
+    accent: "#db2777",
+  },
+  {
+    background: "rgba(139, 92, 246, 0.16)",
+    border: "rgba(139, 92, 246, 0.38)",
+    accent: "#7c3aed",
+  },
+  {
+    background: "rgba(132, 204, 22, 0.16)",
+    border: "rgba(132, 204, 22, 0.38)",
+    accent: "#4d7c0f",
+  },
 ];
 
 function getCategoryPalette(category?: string | null) {
@@ -59,7 +83,10 @@ function getCategoryPalette(category?: string | null) {
 }
 
 function getHours() {
-  return Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, index) => DAY_START_HOUR + index);
+  return Array.from(
+    { length: DAY_END_HOUR - DAY_START_HOUR },
+    (_, index) => DAY_START_HOUR + index,
+  );
 }
 
 export default function WeeklySchedulePage() {
@@ -89,8 +116,8 @@ export default function WeeklySchedulePage() {
       data.sort((a, b) =>
         a.dayOfWeek === b.dayOfWeek
           ? a.startTime.localeCompare(b.startTime)
-          : a.dayOfWeek - b.dayOfWeek
-      )
+          : a.dayOfWeek - b.dayOfWeek,
+      ),
     );
     setLoading(false);
   }
@@ -122,12 +149,14 @@ export default function WeeklySchedulePage() {
 
   async function handleSave(payload: WeeklyTaskPayload) {
     const response = await fetch(
-      editingTask ? `/api/weekly-schedule/${editingTask.id}` : "/api/weekly-schedule",
+      editingTask
+        ? `/api/weekly-schedule/${editingTask.id}`
+        : "/api/weekly-schedule",
       {
         method: editingTask ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     const result = await response.json();
@@ -140,7 +169,9 @@ export default function WeeklySchedulePage() {
     setShowModal(false);
     setEditingTask(null);
     await fetchWeeklyTasks();
-    toast.success(editingTask ? "Bloco atualizado!" : "Bloco adicionado à agenda!");
+    toast.success(
+      editingTask ? "Bloco atualizado!" : "Bloco adicionado à agenda!",
+    );
   }
 
   async function handleDeleteConfirmed() {
@@ -169,7 +200,9 @@ export default function WeeklySchedulePage() {
       <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[var(--primary)] border-t-transparent" />
-          <p className="mt-3 font-semibold text-[var(--subText)]">Carregando agenda semanal...</p>
+          <p className="mt-3 font-semibold text-[var(--subText)]">
+            Carregando agenda semanal...
+          </p>
         </div>
       </div>
     );
@@ -184,18 +217,28 @@ export default function WeeklySchedulePage() {
           <div className="flex min-w-0 items-center gap-3">
             <NexgenLogo className="h-8 w-8" />
             <div>
-              <h1 className="truncate text-lg font-bold text-[var(--text)]">Agenda Semanal</h1>
-              <p className="text-xs text-[var(--subText)]">Blocos fixos da sua rotina</p>
+              <h1 className="truncate text-lg font-bold text-[var(--text)]">
+                Agenda Semanal
+              </h1>
+              <p className="text-xs text-[var(--subText)]">
+                Blocos fixos da sua rotina
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
               {session?.user?.image ? (
-                <img src={session.user.image} alt="" className="h-7 w-7 rounded-full object-cover" />
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="h-7 w-7 rounded-full object-cover"
+                />
               ) : (
                 <User className="h-5 w-5" />
               )}
-              <span>{session?.user?.name || session?.user?.email?.split("@")[0]}</span>
+              <span>
+                {session?.user?.name || session?.user?.email?.split("@")[0]}
+              </span>
             </div>
             <button
               onClick={() => setShowSidebar(true)}
@@ -213,9 +256,12 @@ export default function WeeklySchedulePage() {
         <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-[var(--text)]">Agenda semanal</h3>
+              <h3 className="text-2xl font-bold text-[var(--text)]">
+                Agenda semanal
+              </h3>
               <p className="mt-1 text-sm text-[var(--subText)]">
-                Colunas por dia, linhas por horário e edição rápida direto nos cards.
+                Colunas por dia, linhas por horário e edição rápida direto nos
+                cards.
               </p>
             </div>
             <button
@@ -229,9 +275,13 @@ export default function WeeklySchedulePage() {
           {tasks.length === 0 ? (
             <div className="rounded-[28px] border border-dashed border-[var(--subbackground)] bg-[var(--background)] px-6 py-20 text-center">
               <CalendarDays className="mx-auto h-14 w-14 text-[var(--primary)]" />
-              <h4 className="mt-5 text-2xl font-bold text-[var(--text)]">Sua semana ainda está em branco</h4>
+              <h4 className="mt-5 text-2xl font-bold text-[var(--text)]">
+                Sua semana ainda está em branco
+              </h4>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--subText)]">
-                Crie blocos fixos para aulas, estudo, treinos e compromissos recorrentes. A grade vai organizá-los automaticamente por dia e horário.
+                Crie blocos fixos para aulas, estudo, treinos e compromissos
+                recorrentes. A grade vai organizá-los automaticamente por dia e
+                horário.
               </p>
               <button
                 onClick={() => openCreateModal(1)}
@@ -242,11 +292,16 @@ export default function WeeklySchedulePage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="grid min-w-[1040px] grid-cols-[72px_repeat(7,minmax(130px,1fr))] gap-x-3" style={{ gridAutoRows: "min-content" }}>
+              <div
+                className="grid min-w-[1040px] grid-cols-[72px_repeat(7,minmax(130px,1fr))] gap-x-3"
+                style={{ gridAutoRows: "min-content" }}
+              >
                 <div />
                 {DISPLAY_WEEK_DAYS.map((dayOfWeek) => {
                   const day = getWeekDay(dayOfWeek);
-                  const totalDayTasks = tasks.filter((task) => task.dayOfWeek === dayOfWeek).length;
+                  const totalDayTasks = tasks.filter(
+                    (task) => task.dayOfWeek === dayOfWeek,
+                  ).length;
 
                   return (
                     <div
@@ -258,7 +313,9 @@ export default function WeeklySchedulePage() {
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--subText)]">
                             {day?.shortLabel}
                           </p>
-                          <p className="mt-1 text-lg font-bold text-[var(--text)]">{day?.fullLabel}</p>
+                          <p className="mt-1 text-lg font-bold text-[var(--text)]">
+                            {day?.fullLabel}
+                          </p>
                         </div>
                         <button
                           onClick={() => openCreateModal(dayOfWeek)}
@@ -267,7 +324,9 @@ export default function WeeklySchedulePage() {
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="mt-3 text-xs text-[var(--subText)]">{totalDayTasks} bloco(s)</p>
+                      <p className="mt-3 text-xs text-[var(--subText)]">
+                        {totalDayTasks} bloco(s)
+                      </p>
                     </div>
                   );
                 })}
@@ -280,7 +339,9 @@ export default function WeeklySchedulePage() {
                     <div
                       key={hour}
                       className="absolute left-0 right-0 -translate-y-1/2 text-right text-xs font-bold text-[var(--subText)]"
-                      style={{ top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE }}
+                      style={{
+                        top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE,
+                      }}
                     >
                       {`${String(hour).padStart(2, "0")}:00`}
                     </div>
@@ -302,15 +363,23 @@ export default function WeeklySchedulePage() {
                         <div
                           key={hour}
                           className="absolute inset-x-0 border-t border-dashed border-[var(--subbackground)]/90"
-                          style={{ top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE }}
+                          style={{
+                            top:
+                              (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE,
+                          }}
                         />
                       ))}
 
                       {dayTasks.map((task) => {
                         const startMinutes = timeToMinutes(task.startTime);
                         const endMinutes = timeToMinutes(task.endTime);
-                        const top = Math.max(startMinutes - DAY_START_HOUR * 60, 0) * PIXELS_PER_MINUTE;
-                        const height = Math.max((endMinutes - startMinutes) * PIXELS_PER_MINUTE, 58);
+                        const top =
+                          Math.max(startMinutes - DAY_START_HOUR * 60, 0) *
+                          PIXELS_PER_MINUTE;
+                        const height = Math.max(
+                          (endMinutes - startMinutes) * PIXELS_PER_MINUTE,
+                          58,
+                        );
                         const color = getCategoryPalette(task.category);
 
                         return (
@@ -329,7 +398,10 @@ export default function WeeklySchedulePage() {
                             <div className="mb-2 flex items-center justify-between gap-2">
                               <span
                                 className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
-                                style={{ background: color.border, color: color.accent }}
+                                style={{
+                                  background: color.border,
+                                  color: color.accent,
+                                }}
                               >
                                 {task.category || "Rotina"}
                               </span>
@@ -337,7 +409,9 @@ export default function WeeklySchedulePage() {
                                 {task.startTime} - {task.endTime}
                               </span>
                             </div>
-                            <p className="text-sm font-bold leading-5 text-[var(--text)]">{task.title}</p>
+                            <p className="text-sm font-bold leading-5 text-[var(--text)]">
+                              {task.title}
+                            </p>
                           </button>
                         );
                       })}

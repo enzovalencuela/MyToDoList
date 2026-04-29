@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { validateWeeklyTaskInput } from "@/lib/weekly-schedule";
+import { validateWeeklyTaskInput } from "@/lib/agenda";
 
 function serializeWeeklyTask(task: {
   id: string;
@@ -62,8 +62,13 @@ export async function POST(req: Request) {
     return NextResponse.json(serializeWeeklyTask(weeklyTask), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel salvar a agenda" },
-      { status: 400 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "NÃ£o foi possÃ­vel salvar a agenda",
+      },
+      { status: 400 },
     );
   }
 }

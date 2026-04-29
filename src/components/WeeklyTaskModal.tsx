@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { CalendarDays, Clock3, Tag, Trash2, X } from "lucide-react";
-import { WEEK_DAYS, type WeeklyTaskItem, type WeeklyTaskPayload } from "@/lib/weekly-schedule";
+import {
+  WEEK_DAYS,
+  type WeeklyTaskItem,
+  type WeeklyTaskPayload,
+} from "@/lib/agenda";
 
 interface WeeklyTaskModalProps {
   task?: WeeklyTaskItem | null;
@@ -20,7 +24,9 @@ export default function WeeklyTaskModal({
   onDelete,
 }: WeeklyTaskModalProps) {
   const [title, setTitle] = useState(task?.title ?? "");
-  const [dayOfWeek, setDayOfWeek] = useState(task?.dayOfWeek ?? initialDayOfWeek);
+  const [dayOfWeek, setDayOfWeek] = useState(
+    task?.dayOfWeek ?? initialDayOfWeek,
+  );
   const [startTime, setStartTime] = useState(task?.startTime ?? "08:00");
   const [endTime, setEndTime] = useState(task?.endTime ?? "09:00");
   const [category, setCategory] = useState(task?.category ?? "");
@@ -61,7 +67,9 @@ export default function WeeklyTaskModal({
 
         <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[var(--text)]">Título</label>
+            <label className="mb-2 block text-sm font-semibold text-[var(--text)]">
+              Título
+            </label>
             <input
               type="text"
               required

@@ -31,7 +31,7 @@ interface NavItem {
 
 const primaryNavItems: NavItem[] = [
   { label: "Tarefas", href: "/dashboard", icon: ListTodo },
-  { label: "Agenda", href: "/weekly-schedule", icon: CalendarDays },
+  { label: "Agenda", href: "/agenda", icon: CalendarDays },
 ];
 
 const secondaryNavItems: NavItem[] = [

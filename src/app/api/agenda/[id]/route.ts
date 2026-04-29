@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { validateWeeklyTaskInput } from "@/lib/weekly-schedule";
+import { validateWeeklyTaskInput } from "@/lib/agenda";
 
 function serializeWeeklyTask(task: {
   id: string;
@@ -29,7 +29,7 @@ function serializeWeeklyTask(task: {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const userId = await getUsuarioId();
 
@@ -47,27 +47,38 @@ export async function PATCH(
     });
 
     if (result.count === 0) {
-      return NextResponse.json({ error: "Bloco semanal nÃ£o encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Bloco semanal nÃ£o encontrado" },
+        { status: 404 },
+      );
     }
 
     const updatedTask = await prisma.weeklyTask.findUnique({ where: { id } });
 
     if (!updatedTask) {
-      return NextResponse.json({ error: "Bloco semanal nÃ£o encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Bloco semanal nÃ£o encontrado" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(serializeWeeklyTask(updatedTask));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel atualizar a agenda" },
-      { status: 400 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "NÃ£o foi possÃ­vel atualizar a agenda",
+      },
+      { status: 400 },
     );
   }
 }
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const userId = await getUsuarioId();
 
