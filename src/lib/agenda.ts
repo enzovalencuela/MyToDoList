@@ -24,7 +24,7 @@ export const WEEK_DAYS = [
 ] as const;
 
 export const DISPLAY_WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0] as const;
-export const DAY_START_HOUR = 6;
+export const DAY_START_HOUR = 0;
 export const DAY_END_HOUR = 24;
 
 export function timeToMinutes(value: string) {
