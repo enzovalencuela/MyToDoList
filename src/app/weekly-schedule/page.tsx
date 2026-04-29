@@ -210,47 +210,6 @@ export default function WeeklySchedulePage() {
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
       <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
-        <section className="mb-6 overflow-hidden rounded-[32px] border border-white/35 bg-[var(--bgcard)]/78 shadow-[0_22px_80px_rgba(15,39,64,0.12)] backdrop-blur-xl">
-          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.25fr_0.75fr] lg:px-8 lg:py-8">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--subbackground)] bg-[var(--background)] px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-[var(--subText)]">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
-                Rotina Estática
-              </div>
-              <h2 className="mt-4 text-3xl font-bold text-[var(--text)] lg:text-4xl">
-                Visualize sua semana inteira em um painel contínuo.
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--subText)] lg:text-base">
-                Organize aulas, treinos, blocos de foco e compromissos recorrentes com a mesma leitura rápida de um calendário em grade.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-[26px] border border-[var(--subbackground)] bg-[var(--background)] p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--subText)]">Blocos</p>
-                <p className="mt-3 text-3xl font-bold text-[var(--text)]">{tasks.length}</p>
-                <p className="mt-1 text-sm text-[var(--subText)]">Itens recorrentes ativos</p>
-              </div>
-              <div className="rounded-[26px] border border-[var(--subbackground)] bg-[var(--background)] p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--subText)]">Primeiro horário</p>
-                <p className="mt-3 flex items-center gap-2 text-2xl font-bold text-[var(--text)]">
-                  <Clock3 className="h-5 w-5 text-[var(--primary)]" />
-                  {tasks[0]?.startTime ?? "06:00"}
-                </p>
-                <p className="mt-1 text-sm text-[var(--subText)]">Base visual da grade</p>
-              </div>
-              <div className="rounded-[26px] border border-[var(--subbackground)] bg-[var(--background)] p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--subText)]">Categorias</p>
-                <p className="mt-3 flex items-center gap-2 text-2xl font-bold text-[var(--text)]">
-                  <Tag className="h-5 w-5 text-[var(--primary)]" />
-                  {new Set(tasks.map((task) => task.category).filter(Boolean)).size}
-                </p>
-                <p className="mt-1 text-sm text-[var(--subText)]">Cores inteligentes por contexto</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
