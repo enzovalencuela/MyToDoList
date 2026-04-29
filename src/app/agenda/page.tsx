@@ -201,18 +201,10 @@ export default function AgendaPage() {
       <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
         <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
               <h3 className="text-2xl font-bold text-[var(--text)]">Agenda semanal</h3>
               <p className="mt-1 text-sm text-[var(--subText)]">
                 Colunas por dia, linhas por horário e edição rápida direto nos cards.
               </p>
-            </div>
-            <button
-              onClick={() => openCreateModal(1)}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <Plus className="h-4 w-4" /> Novo bloco
-            </button>
           </div>
 
           {tasks.length === 0 ? (
@@ -243,18 +235,10 @@ export default function AgendaPage() {
                       className="rounded-[24px] border border-[var(--subbackground)] bg-[var(--background)]/86 px-3 py-3"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div>
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--subText)]">
                             {day?.shortLabel}
                           </p>
                           <p className="mt-1 text-lg font-bold text-[var(--text)]">{day?.fullLabel}</p>
-                        </div>
-                        <button
-                          onClick={() => openCreateModal(dayOfWeek)}
-                          className="rounded-full bg-[var(--subbackground)] p-2 text-[var(--text)] transition hover:-translate-y-0.5 hover:bg-[var(--background)]"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
                       </div>
                       <p className="mt-3 text-xs text-[var(--subText)]">{totalDayTasks} bloco(s)</p>
                     </div>
