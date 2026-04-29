@@ -103,7 +103,7 @@ export default function WeeklySchedulePage() {
   const hours = getHours();
 
   async function fetchWeeklyTasks() {
-    const response = await fetch("/api/weekly-schedule");
+    const response = await fetch("/api/agenda");
 
     if (!response.ok) {
       setLoading(false);
@@ -150,8 +150,8 @@ export default function WeeklySchedulePage() {
   async function handleSave(payload: WeeklyTaskPayload) {
     const response = await fetch(
       editingTask
-        ? `/api/weekly-schedule/${editingTask.id}`
-        : "/api/weekly-schedule",
+        ? `/api/agenda/${editingTask.id}`
+        : "/api/agenda",
       {
         method: editingTask ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
