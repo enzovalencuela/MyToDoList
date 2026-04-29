@@ -58,6 +58,7 @@ export default function AgendaPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [tasks, setTasks] = useState<WeeklyTaskItem[]>([]);
+  const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -99,6 +100,14 @@ export default function AgendaPage() {
       })();
     }
   }, [router, status]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNow(new Date());
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   function openCreateModal(dayOfWeek = 1) {
     setEditingTask(null);
@@ -152,6 +161,18 @@ export default function AgendaPage() {
     await fetchWeeklyTasks();
     toast.success("Bloco removido da agenda.");
   }
+
+  const currentDayOfWeek = now.getDay();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentTimeTop =
+    (currentMinutes - DAY_START_HOUR * 60) * PIXELS_PER_MINUTE;
+  const showCurrentTimeIndicator =
+    currentMinutes >= DAY_START_HOUR * 60 &&
+    currentMinutes < DAY_END_HOUR * 60;
+  const currentTimeLabel = now.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   if (status === "loading" || loading) {
     return (
@@ -249,6 +270,16 @@ export default function AgendaPage() {
                   className="relative mt-3 rounded-[24px] bg-transparent"
                   style={{ height: GRID_MINUTES * PIXELS_PER_MINUTE }}
                 >
+                  {showCurrentTimeIndicator && (
+                    <div
+                      className="absolute left-0 right-0 z-10 -translate-y-1/2"
+                      style={{ top: currentTimeTop }}
+                    >
+                      <div className="ml-auto w-fit rounded-full bg-[#ff6b57] px-2 py-1 text-[10px] font-bold text-white shadow-lg">
+                        {currentTimeLabel}
+                      </div>
+                    </div>
+                  )}
                   {hours.map((hour) => (
                     <div
                       key={hour}
@@ -278,6 +309,17 @@ export default function AgendaPage() {
                           style={{ top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE }}
                         />
                       ))}
+
+                      {showCurrentTimeIndicator && dayOfWeek === currentDayOfWeek && (
+                        <div
+                          className="absolute inset-x-0 z-20 -translate-y-1/2"
+                          style={{ top: currentTimeTop }}
+                        >
+                          <div className="relative h-0.5 bg-[#ff6b57] shadow-[0_0_0_1px_rgba(255,107,87,0.18)]">
+                            <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#ff6b57] shadow-md" />
+                          </div>
+                        </div>
+                      )}
 
                       {dayTasks.map((task) => {
                         const startMinutes = timeToMinutes(task.startTime);
