@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateUsuario } from "@/lib/usuario";
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
-  const usuario = await prisma.usuario.findUnique({ where: { email: session.user.email } });
-  if (!usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const usuario = await getOrCreateUsuario();
+  if (!usuario) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { orderedIds } = await req.json();
   if (!Array.isArray(orderedIds)) {
-    return NextResponse.json({ error: "orderedIds é obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "orderedIds Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   const updates = orderedIds.map((id: string, index: number) =>

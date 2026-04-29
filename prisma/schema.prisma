@@ -17,6 +17,7 @@ model Usuario {
   foto_perfil  String?
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
+  weeklyTasks  WeeklyTask[]
 
   @@map("usuario")
 }
@@ -33,6 +34,22 @@ model Tarefa {
   usuario       Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@map("tarefa")
+}
+
+model WeeklyTask {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  category  String?
+  userId    Int      @map("id_usuario")
+  user      Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, dayOfWeek, startTime])
+  @@map("weekly_task")
 }
 
 // ========== TABELAS NOVAS (NextAuth) ==========

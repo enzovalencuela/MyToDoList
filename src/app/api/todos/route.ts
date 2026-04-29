@@ -1,35 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-async function getUsuarioId(): Promise<number | null> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return null;
-
-  // Find or create usuario by email
-  let usuario = await prisma.usuario.findUnique({ where: { email: session.user.email } });
-  if (!usuario) {
-    usuario = await prisma.usuario.create({
-      data: {
-        email: session.user.email,
-        name: session.user.name ?? null,
-      },
-    });
-  }
-  return usuario.id_usuario;
-}
+import { getUsuarioId } from "@/lib/usuario";
 
 export async function GET() {
   const id_usuario = await getUsuarioId();
-  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!id_usuario) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const tarefas = await prisma.tarefa.findMany({
     where: { id_usuario },
     orderBy: [{ ordem: "asc" }],
   });
 
-  // Map to frontend format
   const todos = tarefas.map((t) => ({
     id: String(t.id_tarefa),
     title: t.titulo,
@@ -46,12 +27,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const id_usuario = await getUsuarioId();
-  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!id_usuario) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { title, description, priority, dueDate } = await req.json();
 
   if (!title?.trim()) {
-    return NextResponse.json({ error: "Título é obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "TÃ­tulo Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   const maxOrdem = await prisma.tarefa.aggregate({ where: { id_usuario }, _max: { ordem: true } });
@@ -69,24 +50,27 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({
-    id: String(tarefa.id_tarefa),
-    title: tarefa.titulo,
-    description: tarefa.descricao,
-    completed: false,
-    priority: tarefa.prioridade,
-    dueDate: tarefa.data_prazo?.toISOString() ?? null,
-    order: tarefa.ordem,
-  }, { status: 201 });
+  return NextResponse.json(
+    {
+      id: String(tarefa.id_tarefa),
+      title: tarefa.titulo,
+      description: tarefa.descricao,
+      completed: false,
+      priority: tarefa.prioridade,
+      dueDate: tarefa.data_prazo?.toISOString() ?? null,
+      order: tarefa.ordem,
+    },
+    { status: 201 }
+  );
 }
 
 export async function PUT(req: Request) {
   const id_usuario = await getUsuarioId();
-  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!id_usuario) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { id, completed, title, description, priority, dueDate } = await req.json();
 
-  if (!id) return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "ID Ã© obrigatÃ³rio" }, { status: 400 });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
@@ -101,13 +85,13 @@ export async function PUT(req: Request) {
     data,
   });
 
-  if (result.count === 0) return NextResponse.json({ error: "Tarefa não encontrada" }, { status: 404 });
+  if (result.count === 0) return NextResponse.json({ error: "Tarefa nÃ£o encontrada" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
 export async function DELETE(req: Request) {
   const id_usuario = await getUsuarioId();
-  if (!id_usuario) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!id_usuario) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { id } = await req.json();
 
