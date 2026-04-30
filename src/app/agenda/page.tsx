@@ -474,15 +474,19 @@ export default function AgendaPage() {
                             }}
                           >
                             <div className="mb-2 flex items-center justify-between gap-2">
-                              <span
-                                className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
-                                style={{
-                                  background: color.border,
-                                  color: color.accent,
-                                }}
-                              >
-                                {task.category || "Rotina"}
-                              </span>
+                              {task.category ? (
+                                <span
+                                  className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
+                                  style={{
+                                    background: color.border,
+                                    color: color.accent,
+                                  }}
+                                >
+                                  {task.category}
+                                </span>
+                              ) : (
+                                <span />
+                              )}
                               <span className="text-[11px] font-bold text-[var(--subText)]">
                                 {task.startTime} - {task.endTime}
                               </span>
