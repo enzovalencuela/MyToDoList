@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { CalendarDays, Clock3, Tag, Trash2, X } from "lucide-react";
 import {
+  DEFAULT_WEEKLY_TASK_COLOR,
   WEEK_DAYS,
+  WEEKLY_TASK_COLOR_OPTIONS,
+  type WeeklyTaskColorKey,
   type WeeklyTaskBatchPayload,
   type WeeklyTaskItem,
 } from "@/lib/agenda";
@@ -34,6 +37,9 @@ export default function WeeklyTaskModal({
   const [startTime, setStartTime] = useState(task?.startTime ?? "08:00");
   const [endTime, setEndTime] = useState(task?.endTime ?? "09:00");
   const [category, setCategory] = useState(task?.category ?? "");
+  const [color, setColor] = useState<WeeklyTaskColorKey>(
+    (task?.color as WeeklyTaskColorKey | undefined) ?? DEFAULT_WEEKLY_TASK_COLOR,
+  );
   const [daysError, setDaysError] = useState("");
   const [applyToAllInstances, setApplyToAllInstances] = useState(false);
 
@@ -68,6 +74,7 @@ export default function WeeklyTaskModal({
       startTime,
       endTime,
       category: category.trim() || null,
+      color,
       applyToAllInstances,
       originalTitle: task?.title,
     });
@@ -201,6 +208,43 @@ export default function WeeklyTaskModal({
                 className="w-full rounded-2xl border border-transparent bg-[var(--subbackground)] px-4 py-3 text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:bg-[var(--bgcard)]"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[var(--text)]">
+              Cor do bloco
+            </label>
+            <div className="flex flex-wrap gap-3">
+              {WEEKLY_TASK_COLOR_OPTIONS.map((option) => {
+                const selected = color === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    title={option.label}
+                    aria-label={option.label}
+                    aria-pressed={selected}
+                    onClick={() => setColor(option.key)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                      selected
+                        ? "ring-2 ring-[var(--text)] ring-offset-2 ring-offset-[var(--bgcard)]"
+                        : "hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: option.solid }}
+                  >
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full bg-white/90 transition ${
+                        selected ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-[var(--subText)]">
+              Escolha uma cor suave para destacar visualmente esse bloco na agenda.
+            </p>
           </div>
 
           {task && (

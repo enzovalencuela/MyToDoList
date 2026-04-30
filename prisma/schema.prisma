@@ -43,6 +43,7 @@ model WeeklyTask {
   startTime String
   endTime   String
   category  String?
+  color     String   @default("blue")
   userId    Int      @map("id_usuario")
   user      Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")

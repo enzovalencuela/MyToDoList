@@ -10,6 +10,7 @@ function serializeWeeklyTask(task: {
   startTime: string;
   endTime: string;
   category: string | null;
+  color: string;
   userId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -21,6 +22,7 @@ function serializeWeeklyTask(task: {
     startTime: task.startTime,
     endTime: task.endTime,
     category: task.category,
+    color: task.color,
     userId: task.userId,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
@@ -45,6 +47,7 @@ export async function PATCH(
       startTime: string;
       endTime: string;
       category?: string | null;
+      color?: string;
       applyToAllInstances?: boolean;
       originalTitle?: string;
     };
@@ -62,6 +65,7 @@ export async function PATCH(
             startTime: payload.startTime,
             endTime: payload.endTime,
             category: payload.category,
+            color: payload.color,
           },
         })
       : await prisma.weeklyTask.updateMany({

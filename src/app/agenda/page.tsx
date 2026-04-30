@@ -14,8 +14,10 @@ import WeeklyTaskModal from "@/components/WeeklyTaskModal";
 import {
   DAY_END_HOUR,
   DAY_START_HOUR,
+  DEFAULT_WEEKLY_TASK_COLOR,
   DISPLAY_WEEK_DAYS,
   getWeekDay,
+  getWeeklyTaskColorStyles,
   timeToMinutes,
   type WeeklyTaskBatchPayload,
   type WeeklyTaskItem,
@@ -24,32 +26,6 @@ import {
 
 const PIXELS_PER_MINUTE = 1.15;
 const GRID_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
-
-const palette = [
-  { background: "rgba(0, 142, 234, 0.16)", border: "rgba(0, 142, 234, 0.38)", accent: "#008eea" },
-  { background: "rgba(20, 184, 166, 0.16)", border: "rgba(20, 184, 166, 0.38)", accent: "#0f766e" },
-  { background: "rgba(249, 115, 22, 0.16)", border: "rgba(249, 115, 22, 0.38)", accent: "#ea580c" },
-  { background: "rgba(236, 72, 153, 0.16)", border: "rgba(236, 72, 153, 0.38)", accent: "#db2777" },
-  { background: "rgba(139, 92, 246, 0.16)", border: "rgba(139, 92, 246, 0.38)", accent: "#7c3aed" },
-  { background: "rgba(132, 204, 22, 0.16)", border: "rgba(132, 204, 22, 0.38)", accent: "#4d7c0f" },
-];
-
-function getCategoryPalette(category?: string | null) {
-  if (!category) {
-    return {
-      background: "rgba(15, 39, 64, 0.08)",
-      border: "rgba(76, 106, 133, 0.24)",
-      accent: "var(--text)",
-    };
-  }
-
-  const seed = category
-    .toLowerCase()
-    .split("")
-    .reduce((total, char) => total + char.charCodeAt(0), 0);
-
-  return palette[seed % palette.length];
-}
 
 function getHours() {
   return Array.from(
@@ -137,6 +113,7 @@ export default function AgendaPage() {
         startTime: payload.startTime,
         endTime: payload.endTime,
         category: payload.category,
+        color: payload.color ?? DEFAULT_WEEKLY_TASK_COLOR,
       };
 
       const response = await fetch(`/api/agenda/${editingTask.id}`, {
@@ -181,6 +158,7 @@ export default function AgendaPage() {
             startTime: payload.startTime,
             endTime: payload.endTime,
             category: payload.category,
+            color: payload.color ?? DEFAULT_WEEKLY_TASK_COLOR,
           } satisfies WeeklyTaskPayload),
         }),
       ),
@@ -458,7 +436,7 @@ export default function AgendaPage() {
                           (endMinutes - startMinutes) * PIXELS_PER_MINUTE,
                           58,
                         );
-                        const color = getCategoryPalette(task.category);
+                        const color = getWeeklyTaskColorStyles(task.color);
 
                         return (
                           <button
@@ -471,6 +449,8 @@ export default function AgendaPage() {
                               height,
                               background: color.background,
                               borderColor: color.border,
+                              borderLeftWidth: 4,
+                              borderLeftColor: color.solid,
                             }}
                           >
                             <div className="mb-2 flex items-center justify-between gap-2">

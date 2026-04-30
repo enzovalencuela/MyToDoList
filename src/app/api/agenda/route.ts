@@ -10,6 +10,7 @@ function serializeWeeklyTask(task: {
   startTime: string;
   endTime: string;
   category: string | null;
+  color: string;
   userId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -21,6 +22,7 @@ function serializeWeeklyTask(task: {
     startTime: task.startTime,
     endTime: task.endTime,
     category: task.category,
+    color: task.color,
     userId: task.userId,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
