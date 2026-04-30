@@ -4,15 +4,15 @@ import { useState } from "react";
 import { CalendarDays, Clock3, Tag, Trash2, X } from "lucide-react";
 import {
   WEEK_DAYS,
+  type WeeklyTaskBatchPayload,
   type WeeklyTaskItem,
-  type WeeklyTaskPayload,
 } from "@/lib/agenda";
 
 interface WeeklyTaskModalProps {
   task?: WeeklyTaskItem | null;
   initialDayOfWeek?: number;
   onClose: () => void;
-  onSave: (payload: WeeklyTaskPayload) => Promise<void> | void;
+  onSave: (payload: WeeklyTaskBatchPayload) => Promise<void> | void;
   onDelete?: (task: WeeklyTaskItem) => Promise<void> | void;
 }
 
@@ -24,19 +24,42 @@ export default function WeeklyTaskModal({
   onDelete,
 }: WeeklyTaskModalProps) {
   const [title, setTitle] = useState(task?.title ?? "");
-  const [dayOfWeek, setDayOfWeek] = useState(
+  const [selectedDays, setSelectedDays] = useState<number[]>([
     task?.dayOfWeek ?? initialDayOfWeek,
-  );
+  ]);
   const [startTime, setStartTime] = useState(task?.startTime ?? "08:00");
   const [endTime, setEndTime] = useState(task?.endTime ?? "09:00");
   const [category, setCategory] = useState(task?.category ?? "");
+  const [daysError, setDaysError] = useState("");
+
+  function toggleDay(dayValue: number) {
+    setDaysError("");
+    setSelectedDays((currentDays) => {
+      const hasDay = currentDays.includes(dayValue);
+
+      if (task) {
+        return hasDay ? currentDays : [dayValue];
+      }
+
+      if (hasDay) {
+        return currentDays.filter((value) => value !== dayValue);
+      }
+
+      return [...currentDays, dayValue].sort((a, b) => a - b);
+    });
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (selectedDays.length === 0) {
+      setDaysError("Selecione pelo menos um dia da semana.");
+      return;
+    }
+
     await onSave({
       title: title.trim(),
-      dayOfWeek,
+      daysOfWeek: selectedDays,
       startTime,
       endTime,
       category: category.trim() || null,
@@ -83,19 +106,54 @@ export default function WeeklyTaskModal({
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
-                <CalendarDays className="h-4 w-4" /> Dia
+                <CalendarDays className="h-4 w-4" /> Dias da semana
               </label>
-              <select
-                value={dayOfWeek}
-                onChange={(event) => setDayOfWeek(Number(event.target.value))}
-                className="w-full rounded-2xl border border-transparent bg-[var(--subbackground)] px-4 py-3 text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:bg-[var(--bgcard)]"
-              >
-                {WEEK_DAYS.map((day) => (
-                  <option key={day.value} value={day.value}>
-                    {day.fullLabel}
-                  </option>
-                ))}
-              </select>
+              <div className="grid grid-cols-7 gap-2">
+                {WEEK_DAYS.map((day) => {
+                  const shortLabel =
+                    day.value === 0
+                      ? "D"
+                      : day.value === 1
+                        ? "S"
+                        : day.value === 2
+                          ? "T"
+                          : day.value === 3
+                            ? "Q"
+                            : day.value === 4
+                              ? "Q"
+                              : day.value === 5
+                                ? "S"
+                                : "S";
+                  const selected = selectedDays.includes(day.value);
+
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      title={day.fullLabel}
+                      aria-pressed={selected}
+                      onClick={() => toggleDay(day.value)}
+                      className={`flex h-11 items-center justify-center rounded-2xl border text-sm font-bold transition ${
+                        selected
+                          ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-md"
+                          : "border-transparent bg-[var(--subbackground)] text-[var(--text)] hover:border-[var(--primary)]/35"
+                      }`}
+                    >
+                      {shortLabel}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-[var(--subText)]">
+                {task
+                  ? "Na edição, selecione o dia em que este bloco deve permanecer."
+                  : "Você pode marcar vários dias para criar a mesma rotina em massa."}
+              </p>
+              {daysError && (
+                <p className="mt-2 text-xs font-semibold text-red-500">
+                  {daysError}
+                </p>
+              )}
             </div>
 
             <div>

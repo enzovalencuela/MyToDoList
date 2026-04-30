@@ -17,20 +17,46 @@ import {
   DISPLAY_WEEK_DAYS,
   getWeekDay,
   timeToMinutes,
+  type WeeklyTaskBatchPayload,
   type WeeklyTaskItem,
   type WeeklyTaskPayload,
 } from "@/lib/agenda";
+import Image from "next/image";
 
 const PIXELS_PER_MINUTE = 1.15;
 const GRID_MINUTES = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
 const palette = [
-  { background: "rgba(0, 142, 234, 0.16)", border: "rgba(0, 142, 234, 0.38)", accent: "#008eea" },
-  { background: "rgba(20, 184, 166, 0.16)", border: "rgba(20, 184, 166, 0.38)", accent: "#0f766e" },
-  { background: "rgba(249, 115, 22, 0.16)", border: "rgba(249, 115, 22, 0.38)", accent: "#ea580c" },
-  { background: "rgba(236, 72, 153, 0.16)", border: "rgba(236, 72, 153, 0.38)", accent: "#db2777" },
-  { background: "rgba(139, 92, 246, 0.16)", border: "rgba(139, 92, 246, 0.38)", accent: "#7c3aed" },
-  { background: "rgba(132, 204, 22, 0.16)", border: "rgba(132, 204, 22, 0.38)", accent: "#4d7c0f" },
+  {
+    background: "rgba(0, 142, 234, 0.16)",
+    border: "rgba(0, 142, 234, 0.38)",
+    accent: "#008eea",
+  },
+  {
+    background: "rgba(20, 184, 166, 0.16)",
+    border: "rgba(20, 184, 166, 0.38)",
+    accent: "#0f766e",
+  },
+  {
+    background: "rgba(249, 115, 22, 0.16)",
+    border: "rgba(249, 115, 22, 0.38)",
+    accent: "#ea580c",
+  },
+  {
+    background: "rgba(236, 72, 153, 0.16)",
+    border: "rgba(236, 72, 153, 0.38)",
+    accent: "#db2777",
+  },
+  {
+    background: "rgba(139, 92, 246, 0.16)",
+    border: "rgba(139, 92, 246, 0.38)",
+    accent: "#7c3aed",
+  },
+  {
+    background: "rgba(132, 204, 22, 0.16)",
+    border: "rgba(132, 204, 22, 0.38)",
+    accent: "#4d7c0f",
+  },
 ];
 
 function getCategoryPalette(category?: string | null) {
@@ -51,7 +77,10 @@ function getCategoryPalette(category?: string | null) {
 }
 
 function getHours() {
-  return Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, index) => DAY_START_HOUR + index);
+  return Array.from(
+    { length: DAY_END_HOUR - DAY_START_HOUR },
+    (_, index) => DAY_START_HOUR + index,
+  );
 }
 
 export default function AgendaPage() {
@@ -82,8 +111,8 @@ export default function AgendaPage() {
       data.sort((a, b) =>
         a.dayOfWeek === b.dayOfWeek
           ? a.startTime.localeCompare(b.startTime)
-          : a.dayOfWeek - b.dayOfWeek
-      )
+          : a.dayOfWeek - b.dayOfWeek,
+      ),
     );
     setLoading(false);
   }
@@ -121,24 +150,80 @@ export default function AgendaPage() {
     setShowModal(true);
   }
 
-  async function handleSave(payload: WeeklyTaskPayload) {
-    const response = await fetch(editingTask ? `/api/agenda/${editingTask.id}` : "/api/agenda", {
-      method: editingTask ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  async function handleSave(payload: WeeklyTaskBatchPayload) {
+    if (editingTask) {
+      const updatePayload: WeeklyTaskPayload = {
+        title: payload.title,
+        dayOfWeek: payload.daysOfWeek[0] ?? editingTask.dayOfWeek,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        category: payload.category,
+      };
 
-    const result = await response.json();
+      const response = await fetch(`/api/agenda/${editingTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatePayload),
+      });
 
-    if (!response.ok) {
-      toast.error(result.error ?? "Não foi possível salvar a agenda.");
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.error ?? "Não foi possível salvar a agenda.");
+        return;
+      }
+
+      setShowModal(false);
+      setEditingTask(null);
+      await fetchWeeklyTasks();
+      toast.success("Bloco atualizado!");
+      return;
+    }
+
+    const createResponses = await Promise.allSettled(
+      payload.daysOfWeek.map((dayOfWeek) =>
+        fetch("/api/agenda", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: payload.title,
+            dayOfWeek,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            category: payload.category,
+          } satisfies WeeklyTaskPayload),
+        }),
+      ),
+    );
+
+    const failedRequests: string[] = [];
+
+    for (const request of createResponses) {
+      if (request.status === "rejected") {
+        failedRequests.push("Falha de rede");
+        continue;
+      }
+
+      if (!request.value.ok) {
+        const result = await request.value.json();
+        failedRequests.push(
+          result.error ?? "Não foi possível criar um dos blocos.",
+        );
+      }
+    }
+
+    if (failedRequests.length > 0) {
+      toast.error(failedRequests[0]);
       return;
     }
 
     setShowModal(false);
-    setEditingTask(null);
     await fetchWeeklyTasks();
-    toast.success(editingTask ? "Bloco atualizado!" : "Bloco adicionado à agenda!");
+    toast.success(
+      payload.daysOfWeek.length === 1
+        ? "Bloco adicionado à agenda!"
+        : `${payload.daysOfWeek.length} blocos adicionados à agenda!`,
+    );
   }
 
   async function handleDeleteConfirmed() {
@@ -167,8 +252,7 @@ export default function AgendaPage() {
   const currentTimeTop =
     (currentMinutes - DAY_START_HOUR * 60) * PIXELS_PER_MINUTE;
   const showCurrentTimeIndicator =
-    currentMinutes >= DAY_START_HOUR * 60 &&
-    currentMinutes < DAY_END_HOUR * 60;
+    currentMinutes >= DAY_START_HOUR * 60 && currentMinutes < DAY_END_HOUR * 60;
   const currentTimeLabel = now.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
@@ -176,42 +260,54 @@ export default function AgendaPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[var(--primary)] border-t-transparent" />
-          <p className="mt-3 font-semibold text-[var(--subText)]">Carregando agenda semanal...</p>
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-(--primary) border-t-transparent" />
+          <p className="mt-3 font-semibold text-(--subText)">
+            Carregando agenda semanal...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(75,185,255,0.22),_transparent_32%),linear-gradient(180deg,var(--background),var(--background-2))]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(75,185,255,0.22),transparent_32%),linear-gradient(180deg,var(--background),var(--background-2))]">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
-      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:hidden">
+      <header className="sticky top-0 z-20 border-b border-(--subbackground)/60 bg-(--background)/88 backdrop-blur-lg lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <NexgenLogo className="h-8 w-8" />
             <div>
-              <h1 className="truncate text-lg font-bold text-[var(--text)]">Agenda Semanal</h1>
-              <p className="text-xs text-[var(--subText)]">Blocos fixos da sua rotina</p>
+              <h1 className="truncate text-lg font-bold text-(--text)">
+                Agenda Semanal
+              </h1>
+              <p className="text-xs text-(--subText)">
+                Blocos fixos da sua rotina
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
+            <div className="hidden items-center gap-2 text-sm text-(--subText) sm:flex">
               {session?.user?.image ? (
-                <img src={session.user.image} alt="" className="h-7 w-7 rounded-full object-cover" />
+                <Image
+                  src={session.user.image}
+                  alt=""
+                  className="h-7 w-7 rounded-full object-cover"
+                />
               ) : (
                 <User className="h-5 w-5" />
               )}
-              <span>{session?.user?.name || session?.user?.email?.split("@")[0]}</span>
+              <span>
+                {session?.user?.name || session?.user?.email?.split("@")[0]}
+              </span>
             </div>
             <button
               onClick={() => setShowSidebar(true)}
-              className="rounded-full p-2 transition hover:bg-[var(--subbackground)]"
+              className="rounded-full p-2 transition hover:bg-(--subbackground)"
             >
-              <Menu className="h-6 w-6 text-[var(--text)]" />
+              <Menu className="h-6 w-6 text-(--text)" />
             </button>
           </div>
         </div>
@@ -219,55 +315,75 @@ export default function AgendaPage() {
 
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
-        <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
+      <main className="mx-auto max-w-400 px-4 py-6 lg:ml-72.5 lg:px-8 lg:py-8">
+        <section className="rounded-4xl border border-white/30 bg-(--bgcard)/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <h3 className="text-2xl font-bold text-[var(--text)]">Agenda semanal</h3>
-              <p className="mt-1 text-sm text-[var(--subText)]">
-                Colunas por dia, linhas por horário e edição rápida direto nos cards.
+            <div>
+              <h3 className="text-2xl font-bold text-(--text)">
+                Agenda semanal
+              </h3>
+              <p className="mt-1 text-sm text-(--subText)">
+                Colunas por dia, linhas por horário e edição rápida direto nos
+                cards.
               </p>
+            </div>
           </div>
 
           {tasks.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-[var(--subbackground)] bg-[var(--background)] px-6 py-20 text-center">
-              <CalendarDays className="mx-auto h-14 w-14 text-[var(--primary)]" />
-              <h4 className="mt-5 text-2xl font-bold text-[var(--text)]">Sua semana ainda está em branco</h4>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--subText)]">
-                Crie blocos fixos para aulas, estudo, treinos e compromissos recorrentes. A grade vai organizá-los automaticamente por dia e horário.
+            <div className="rounded-[28px] border border-dashed border-(--subbackground) bg-background px-6 py-20 text-center">
+              <CalendarDays className="mx-auto h-14 w-14 text-(--primary)" />
+              <h4 className="mt-5 text-2xl font-bold text-(--text)">
+                Sua semana ainda está em branco
+              </h4>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-(--subText)">
+                Crie blocos fixos para aulas, estudo, treinos e compromissos
+                recorrentes. A grade vai organizá-los automaticamente por dia e
+                horário.
               </p>
               <button
                 onClick={() => openCreateModal(1)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-linear-to-r from-(--primary) to-(--secondary) px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <Plus className="h-4 w-4" /> Criar primeiro bloco
               </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="grid min-w-[1040px] grid-cols-[72px_repeat(7,minmax(130px,1fr))] gap-x-3" style={{ gridAutoRows: "min-content" }}>
+              <div
+                className="grid min-w-260 grid-cols-[72px_repeat(7,minmax(130px,1fr))] gap-x-3"
+                style={{ gridAutoRows: "min-content" }}
+              >
                 <div />
                 {DISPLAY_WEEK_DAYS.map((dayOfWeek) => {
                   const day = getWeekDay(dayOfWeek);
-                  const totalDayTasks = tasks.filter((task) => task.dayOfWeek === dayOfWeek).length;
+                  const totalDayTasks = tasks.filter(
+                    (task) => task.dayOfWeek === dayOfWeek,
+                  ).length;
 
                   return (
                     <div
                       key={dayOfWeek}
-                      className="rounded-[24px] border border-[var(--subbackground)] bg-[var(--background)]/86 px-3 py-3"
+                      className="rounded-3xl border border-(--subbackground) bg-(--background)/86 px-3 py-3"
                     >
                       <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--subText)]">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-(--subText)">
                             {day?.shortLabel}
                           </p>
-                          <p className="mt-1 text-lg font-bold text-[var(--text)]">{day?.fullLabel}</p>
+                          <p className="mt-1 text-lg font-bold text-(--text)">
+                            {day?.fullLabel}
+                          </p>
+                        </div>
                       </div>
-                      <p className="mt-3 text-xs text-[var(--subText)]">{totalDayTasks} bloco(s)</p>
+                      <p className="mt-3 text-xs text-(--subText)">
+                        {totalDayTasks} bloco(s)
+                      </p>
                     </div>
                   );
                 })}
 
                 <div
-                  className="relative mt-3 rounded-[24px] bg-transparent"
+                  className="relative mt-3 rounded-3xl bg-transparent"
                   style={{ height: GRID_MINUTES * PIXELS_PER_MINUTE }}
                 >
                   {showCurrentTimeIndicator && (
@@ -283,8 +399,10 @@ export default function AgendaPage() {
                   {hours.map((hour) => (
                     <div
                       key={hour}
-                      className="absolute left-0 right-0 -translate-y-1/2 text-right text-xs font-bold text-[var(--subText)]"
-                      style={{ top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE }}
+                      className="absolute left-0 right-0 -translate-y-1/2 text-right text-xs font-bold text-(--subText)"
+                      style={{
+                        top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE,
+                      }}
                     >
                       {`${String(hour).padStart(2, "0")}:00`}
                     </div>
@@ -299,33 +417,42 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={`column-${dayOfWeek}`}
-                      className="relative mt-3 overflow-hidden rounded-[28px] border border-[var(--subbackground)] bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(255,255,255,0.12))]"
+                      className="relative mt-3 overflow-hidden rounded-[28px] border border-(--subbackground) bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(255,255,255,0.12))]"
                       style={{ height: GRID_MINUTES * PIXELS_PER_MINUTE }}
                     >
                       {hours.map((hour) => (
                         <div
                           key={hour}
-                          className="absolute inset-x-0 border-t border-dashed border-[var(--subbackground)]/90"
-                          style={{ top: (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE }}
+                          className="absolute inset-x-0 border-t border-dashed border-(--subbackground)/90"
+                          style={{
+                            top:
+                              (hour - DAY_START_HOUR) * 60 * PIXELS_PER_MINUTE,
+                          }}
                         />
                       ))}
 
-                      {showCurrentTimeIndicator && dayOfWeek === currentDayOfWeek && (
-                        <div
-                          className="absolute inset-x-0 z-20 -translate-y-1/2"
-                          style={{ top: currentTimeTop }}
-                        >
-                          <div className="relative h-0.5 bg-[#ff6b57] shadow-[0_0_0_1px_rgba(255,107,87,0.18)]">
-                            <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#ff6b57] shadow-md" />
+                      {showCurrentTimeIndicator &&
+                        dayOfWeek === currentDayOfWeek && (
+                          <div
+                            className="absolute inset-x-0 z-20 -translate-y-1/2"
+                            style={{ top: currentTimeTop }}
+                          >
+                            <div className="relative h-0.5 bg-[#ff6b57] shadow-[0_0_0_1px_rgba(255,107,87,0.18)]">
+                              <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#ff6b57] shadow-md" />
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {dayTasks.map((task) => {
                         const startMinutes = timeToMinutes(task.startTime);
                         const endMinutes = timeToMinutes(task.endTime);
-                        const top = Math.max(startMinutes - DAY_START_HOUR * 60, 0) * PIXELS_PER_MINUTE;
-                        const height = Math.max((endMinutes - startMinutes) * PIXELS_PER_MINUTE, 58);
+                        const top =
+                          Math.max(startMinutes - DAY_START_HOUR * 60, 0) *
+                          PIXELS_PER_MINUTE;
+                        const height = Math.max(
+                          (endMinutes - startMinutes) * PIXELS_PER_MINUTE,
+                          58,
+                        );
                         const color = getCategoryPalette(task.category);
 
                         return (
@@ -344,15 +471,20 @@ export default function AgendaPage() {
                             <div className="mb-2 flex items-center justify-between gap-2">
                               <span
                                 className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
-                                style={{ background: color.border, color: color.accent }}
+                                style={{
+                                  background: color.border,
+                                  color: color.accent,
+                                }}
                               >
                                 {task.category || "Rotina"}
                               </span>
-                              <span className="text-[11px] font-bold text-[var(--subText)]">
+                              <span className="text-[11px] font-bold text-(--subText)">
                                 {task.startTime} - {task.endTime}
                               </span>
                             </div>
-                            <p className="text-sm font-bold leading-5 text-[var(--text)]">{task.title}</p>
+                            <p className="text-sm font-bold leading-5 text-(--text)">
+                              {task.title}
+                            </p>
                           </button>
                         );
                       })}
@@ -367,7 +499,7 @@ export default function AgendaPage() {
 
       <button
         onClick={() => openCreateModal(1)}
-        className="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-xl transition hover:scale-110 hover:shadow-2xl"
+        className="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-r from-(--primary) to-(--secondary) text-white shadow-xl transition hover:scale-110 hover:shadow-2xl"
       >
         <Plus className="h-7 w-7" />
       </button>

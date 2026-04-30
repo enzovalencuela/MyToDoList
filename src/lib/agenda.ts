@@ -6,6 +6,14 @@ export interface WeeklyTaskPayload {
   category?: string | null;
 }
 
+export interface WeeklyTaskBatchPayload {
+  title: string;
+  daysOfWeek: number[];
+  startTime: string;
+  endTime: string;
+  category?: string | null;
+}
+
 export interface WeeklyTaskItem extends WeeklyTaskPayload {
   id: string;
   userId: number;
