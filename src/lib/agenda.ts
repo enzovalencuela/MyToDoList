@@ -31,7 +31,7 @@ export const WEEK_DAYS = [
   { value: 6, shortLabel: "Sáb", fullLabel: "Sábado" },
 ] as const;
 
-export const DISPLAY_WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0] as const;
+export const DISPLAY_WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export const DAY_START_HOUR = 0;
 export const DAY_END_HOUR = 24;
 
