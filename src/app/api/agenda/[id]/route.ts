@@ -34,21 +34,46 @@ export async function PATCH(
   const userId = await getUsuarioId();
 
   if (!userId) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   try {
     const { id } = await params;
-    const payload = validateWeeklyTaskInput(await req.json());
+    const body = (await req.json()) as {
+      title: string;
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      category?: string | null;
+      applyToAllInstances?: boolean;
+      originalTitle?: string;
+    };
 
-    const result = await prisma.weeklyTask.updateMany({
-      where: { id, userId },
-      data: payload,
-    });
+    const payload = validateWeeklyTaskInput(body);
+    const applyToAllInstances = body.applyToAllInstances === true;
+    const originalTitle =
+      typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
+
+    const result = await prisma.weeklyTask.updateMany(
+      applyToAllInstances
+        ? {
+            where: { userId, title: originalTitle },
+            data: {
+              title: payload.title,
+              startTime: payload.startTime,
+              endTime: payload.endTime,
+              category: payload.category,
+            },
+          }
+        : {
+            where: { id, userId },
+            data: payload,
+          },
+    );
 
     if (result.count === 0) {
       return NextResponse.json(
-        { error: "Bloco semanal nÃ£o encontrado" },
+        { error: "Bloco semanal não encontrado" },
         { status: 404 },
       );
     }
@@ -57,19 +82,22 @@ export async function PATCH(
 
     if (!updatedTask) {
       return NextResponse.json(
-        { error: "Bloco semanal nÃ£o encontrado" },
+        { error: "Bloco semanal não encontrado" },
         { status: 404 },
       );
     }
 
-    return NextResponse.json(serializeWeeklyTask(updatedTask));
+    return NextResponse.json({
+      task: serializeWeeklyTask(updatedTask),
+      affectedCount: result.count,
+    });
   } catch (error) {
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "NÃ£o foi possÃ­vel atualizar a agenda",
+            : "Não foi possível atualizar a agenda",
       },
       { status: 400 },
     );
@@ -77,20 +105,29 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const userId = await getUsuarioId();
 
   if (!userId) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
+  const body = (await req.json().catch(() => ({}))) as {
+    applyToAllInstances?: boolean;
+    originalTitle?: string;
+  };
+  const applyToAllInstances = body.applyToAllInstances === true;
+  const originalTitle =
+    typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
 
-  await prisma.weeklyTask.deleteMany({
-    where: { id, userId },
-  });
+  const result = await prisma.weeklyTask.deleteMany(
+    applyToAllInstances
+      ? { where: { userId, title: originalTitle } }
+      : { where: { id, userId } },
+  );
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, affectedCount: result.count });
 }

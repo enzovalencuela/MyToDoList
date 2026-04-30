@@ -13,7 +13,11 @@ interface WeeklyTaskModalProps {
   initialDayOfWeek?: number;
   onClose: () => void;
   onSave: (payload: WeeklyTaskBatchPayload) => Promise<void> | void;
-  onDelete?: (task: WeeklyTaskItem) => Promise<void> | void;
+  onDelete?: (payload: {
+    task: WeeklyTaskItem;
+    applyToAllInstances: boolean;
+    originalTitle: string;
+  }) => Promise<void> | void;
 }
 
 export default function WeeklyTaskModal({
@@ -31,6 +35,7 @@ export default function WeeklyTaskModal({
   const [endTime, setEndTime] = useState(task?.endTime ?? "09:00");
   const [category, setCategory] = useState(task?.category ?? "");
   const [daysError, setDaysError] = useState("");
+  const [applyToAllInstances, setApplyToAllInstances] = useState(false);
 
   function toggleDay(dayValue: number) {
     setDaysError("");
@@ -63,6 +68,8 @@ export default function WeeklyTaskModal({
       startTime,
       endTime,
       category: category.trim() || null,
+      applyToAllInstances,
+      originalTitle: task?.title,
     });
   }
 
@@ -196,11 +203,36 @@ export default function WeeklyTaskModal({
             </div>
           </div>
 
+          {task && (
+            <label className="flex items-start gap-3 rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-3">
+              <input
+                type="checkbox"
+                checked={applyToAllInstances}
+                onChange={(event) => setApplyToAllInstances(event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--subText)] text-[var(--primary)] focus:ring-[var(--primary)]"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[var(--text)]">
+                  Aplicar a todas as instâncias desta tarefa na semana
+                </span>
+                <span className="mt-1 block text-xs text-[var(--subText)]">
+                  Usa o título original para localizar e atualizar todos os blocos equivalentes.
+                </span>
+              </span>
+            </label>
+          )}
+
           <div className="flex flex-col gap-3 border-t border-[var(--subbackground)] pt-4 sm:flex-row sm:justify-between">
             {task && onDelete ? (
               <button
                 type="button"
-                onClick={() => onDelete(task)}
+                onClick={() =>
+                  onDelete({
+                    task,
+                    applyToAllInstances,
+                    originalTitle: task.title,
+                  })
+                }
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-red-500/12 px-5 py-3 text-sm font-bold text-red-500 transition hover:-translate-y-0.5 hover:bg-red-500/18"
               >
                 <Trash2 className="h-4 w-4" /> Deletar

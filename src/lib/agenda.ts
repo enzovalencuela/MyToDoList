@@ -12,6 +12,8 @@ export interface WeeklyTaskBatchPayload {
   startTime: string;
   endTime: string;
   category?: string | null;
+  applyToAllInstances?: boolean;
+  originalTitle?: string;
 }
 
 export interface WeeklyTaskItem extends WeeklyTaskPayload {
