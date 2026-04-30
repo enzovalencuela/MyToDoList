@@ -459,7 +459,7 @@ export default function AgendaPage() {
                                   className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
                                   style={{
                                     background: color.border,
-                                    color: color.accent,
+                                    color: color.solid,
                                   }}
                                 >
                                   {task.category}
