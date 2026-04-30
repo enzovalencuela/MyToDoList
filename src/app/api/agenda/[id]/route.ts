@@ -54,22 +54,20 @@ export async function PATCH(
     const originalTitle =
       typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
 
-    const result = await prisma.weeklyTask.updateMany(
-      applyToAllInstances
-        ? {
-            where: { userId, title: originalTitle },
-            data: {
-              title: payload.title,
-              startTime: payload.startTime,
-              endTime: payload.endTime,
-              category: payload.category,
-            },
-          }
-        : {
-            where: { id, userId },
-            data: payload,
+    const result = applyToAllInstances
+      ? await prisma.weeklyTask.updateMany({
+          where: { userId, title: originalTitle },
+          data: {
+            title: payload.title,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            category: payload.category,
           },
-    );
+        })
+      : await prisma.weeklyTask.updateMany({
+          where: { id, userId },
+          data: payload,
+        });
 
     if (result.count === 0) {
       return NextResponse.json(
@@ -123,11 +121,13 @@ export async function DELETE(
   const originalTitle =
     typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
 
-  const result = await prisma.weeklyTask.deleteMany(
-    applyToAllInstances
-      ? { where: { userId, title: originalTitle } }
-      : { where: { id, userId } },
-  );
+  const result = applyToAllInstances
+    ? await prisma.weeklyTask.deleteMany({
+        where: { userId, title: originalTitle },
+      })
+    : await prisma.weeklyTask.deleteMany({
+        where: { id, userId },
+      });
 
   return NextResponse.json({ success: true, affectedCount: result.count });
 }
