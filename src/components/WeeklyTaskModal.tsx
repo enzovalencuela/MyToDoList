@@ -84,7 +84,7 @@ export default function WeeklyTaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-white/30 bg-[var(--bgcard)] shadow-2xl">
+      <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-white/30 bg-[var(--bgcard)] shadow-2xl">
         <div className="border-b border-[var(--subbackground)] bg-gradient-to-r from-[var(--background-2)] to-[var(--bgcard)] px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -104,7 +104,10 @@ export default function WeeklyTaskModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 overflow-y-auto px-6 py-6"
+        >
           <div>
             <label className="mb-2 block text-sm font-semibold text-[var(--text)]">
               Título
@@ -216,7 +219,7 @@ export default function WeeklyTaskModal({
             <label className="mb-2 block text-sm font-semibold text-[var(--text)]">
               Cor do bloco
             </label>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
               {WEEKLY_TASK_COLOR_OPTIONS.map((option) => {
                 const selected = color === option.key;
 
@@ -228,7 +231,7 @@ export default function WeeklyTaskModal({
                     aria-label={option.label}
                     aria-pressed={selected}
                     onClick={() => setColor(option.key)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                    className={`flex h-10 w-10 items-center justify-center justify-self-center rounded-full transition ${
                       selected
                         ? "ring-2 ring-[var(--text)] ring-offset-2 ring-offset-[var(--bgcard)]"
                         : "hover:scale-105"
