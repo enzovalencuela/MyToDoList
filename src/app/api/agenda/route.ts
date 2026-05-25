@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
 import { validateWeeklyTaskInput } from "@/lib/agenda";
+import { syncWeeklyTaskToTodos } from "@/lib/weekly-task-sync";
 
 function serializeWeeklyTask(task: {
   id: string;
@@ -11,6 +12,7 @@ function serializeWeeklyTask(task: {
   endTime: string;
   category: string | null;
   color: string;
+  showInTasks: boolean;
   userId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +25,7 @@ function serializeWeeklyTask(task: {
     endTime: task.endTime,
     category: task.category,
     color: task.color,
+    showInTasks: task.showInTasks,
     userId: task.userId,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
@@ -59,6 +62,14 @@ export async function POST(req: Request) {
         ...payload,
         userId,
       },
+    });
+
+    await syncWeeklyTaskToTodos({
+      id: weeklyTask.id,
+      title: weeklyTask.title,
+      dayOfWeek: weeklyTask.dayOfWeek,
+      showInTasks: weeklyTask.showInTasks,
+      userId: weeklyTask.userId,
     });
 
     return NextResponse.json(serializeWeeklyTask(weeklyTask), { status: 201 });

@@ -40,6 +40,7 @@ export default function WeeklyTaskModal({
   const [color, setColor] = useState<WeeklyTaskColorKey>(
     (task?.color as WeeklyTaskColorKey | undefined) ?? DEFAULT_WEEKLY_TASK_COLOR,
   );
+  const [showInTasks, setShowInTasks] = useState(task?.showInTasks ?? false);
   const [daysError, setDaysError] = useState("");
   const [applyToAllInstances, setApplyToAllInstances] = useState(false);
 
@@ -75,6 +76,7 @@ export default function WeeklyTaskModal({
       endTime,
       category: category.trim() || null,
       color,
+      showInTasks,
       applyToAllInstances,
       originalTitle: task?.title,
     });
@@ -246,6 +248,23 @@ export default function WeeklyTaskModal({
               Escolha uma cor suave para destacar visualmente esse bloco na agenda.
             </p>
           </div>
+
+          <label className="flex items-start gap-3 rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-3">
+            <input
+              type="checkbox"
+              checked={showInTasks}
+              onChange={(event) => setShowInTasks(event.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[var(--subText)] text-[var(--primary)] focus:ring-[var(--primary)]"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-[var(--text)]">
+                Mostrar tambÃ©m na pÃ¡gina de tarefas
+              </span>
+              <span className="mt-1 block text-xs text-[var(--subText)]">
+                Cria tarefas com data automaticamente para os prÃ³ximos 30 dias.
+              </span>
+            </span>
+          </label>
 
           {task && (
             <label className="flex items-start gap-3 rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-3">

@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
+import { validateWeeklyTaskInput } from "@/lib/agenda";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { validateWeeklyTaskInput } from "@/lib/agenda";
+import {
+  removeWeeklyTaskTodos,
+  syncWeeklyTaskToTodos,
+  syncWeeklyTasksToTodos,
+} from "@/lib/weekly-task-sync";
 
 function serializeWeeklyTask(task: {
   id: string;
@@ -11,6 +16,7 @@ function serializeWeeklyTask(task: {
   endTime: string;
   category: string | null;
   color: string;
+  showInTasks: boolean;
   userId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +29,7 @@ function serializeWeeklyTask(task: {
     endTime: task.endTime,
     category: task.category,
     color: task.color,
+    showInTasks: task.showInTasks,
     userId: task.userId,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
@@ -36,7 +43,7 @@ export async function PATCH(
   const userId = await getUsuarioId();
 
   if (!userId) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   try {
@@ -48,6 +55,7 @@ export async function PATCH(
       endTime: string;
       category?: string | null;
       color?: string;
+      showInTasks?: boolean;
       applyToAllInstances?: boolean;
       originalTitle?: string;
     };
@@ -57,41 +65,90 @@ export async function PATCH(
     const originalTitle =
       typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
 
-    const result = applyToAllInstances
-      ? await prisma.weeklyTask.updateMany({
-          where: { userId, title: originalTitle },
-          data: {
-            title: payload.title,
-            startTime: payload.startTime,
-            endTime: payload.endTime,
-            category: payload.category,
-            color: payload.color,
-          },
-        })
-      : await prisma.weeklyTask.updateMany({
-          where: { id, userId },
-          data: payload,
-        });
+    let affectedCount = 0;
 
-    if (result.count === 0) {
-      return NextResponse.json(
-        { error: "Bloco semanal não encontrado" },
-        { status: 404 },
-      );
+    if (applyToAllInstances) {
+      const matchingTasks = await prisma.weeklyTask.findMany({
+        where: { userId, title: originalTitle },
+        select: { id: true },
+      });
+
+      if (matchingTasks.length === 0) {
+        return NextResponse.json(
+          { error: "Bloco semanal nÃ£o encontrado" },
+          { status: 404 },
+        );
+      }
+
+      const result = await prisma.weeklyTask.updateMany({
+        where: { userId, title: originalTitle },
+        data: {
+          title: payload.title,
+          startTime: payload.startTime,
+          endTime: payload.endTime,
+          category: payload.category,
+          color: payload.color,
+          showInTasks: payload.showInTasks,
+        },
+      });
+
+      affectedCount = result.count;
+
+      const updatedTasks = await prisma.weeklyTask.findMany({
+        where: { id: { in: matchingTasks.map((task) => task.id) } },
+        select: {
+          id: true,
+          title: true,
+          dayOfWeek: true,
+          showInTasks: true,
+          userId: true,
+        },
+      });
+
+      await syncWeeklyTasksToTodos(updatedTasks);
+    } else {
+      const result = await prisma.weeklyTask.updateMany({
+        where: { id, userId },
+        data: payload,
+      });
+
+      affectedCount = result.count;
+
+      if (result.count === 0) {
+        return NextResponse.json(
+          { error: "Bloco semanal nÃ£o encontrado" },
+          { status: 404 },
+        );
+      }
+
+      const updatedTaskForSync = await prisma.weeklyTask.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          title: true,
+          dayOfWeek: true,
+          showInTasks: true,
+          userId: true,
+        },
+      });
+
+      if (updatedTaskForSync) {
+        await syncWeeklyTaskToTodos(updatedTaskForSync);
+      }
     }
 
     const updatedTask = await prisma.weeklyTask.findUnique({ where: { id } });
 
     if (!updatedTask) {
       return NextResponse.json(
-        { error: "Bloco semanal não encontrado" },
+        { error: "Bloco semanal nÃ£o encontrado" },
         { status: 404 },
       );
     }
 
     return NextResponse.json({
       task: serializeWeeklyTask(updatedTask),
-      affectedCount: result.count,
+      affectedCount,
     });
   } catch (error) {
     return NextResponse.json(
@@ -99,7 +156,7 @@ export async function PATCH(
         error:
           error instanceof Error
             ? error.message
-            : "Não foi possível atualizar a agenda",
+            : "NÃ£o foi possÃ­vel atualizar a agenda",
       },
       { status: 400 },
     );
@@ -113,7 +170,7 @@ export async function DELETE(
   const userId = await getUsuarioId();
 
   if (!userId) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -124,6 +181,21 @@ export async function DELETE(
   const applyToAllInstances = body.applyToAllInstances === true;
   const originalTitle =
     typeof body.originalTitle === "string" ? body.originalTitle.trim() : "";
+
+  const tasksToDelete = applyToAllInstances
+    ? await prisma.weeklyTask.findMany({
+        where: { userId, title: originalTitle },
+        select: { id: true },
+      })
+    : await prisma.weeklyTask.findMany({
+        where: { id, userId },
+        select: { id: true },
+      });
+
+  await removeWeeklyTaskTodos(
+    tasksToDelete.map((task) => task.id),
+    userId,
+  );
 
   const result = applyToAllInstances
     ? await prisma.weeklyTask.deleteMany({

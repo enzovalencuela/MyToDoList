@@ -5,6 +5,7 @@ export interface WeeklyTaskPayload {
   endTime: string;
   category?: string | null;
   color?: WeeklyTaskColorKey;
+  showInTasks?: boolean;
 }
 
 export interface WeeklyTaskBatchPayload {
@@ -14,6 +15,7 @@ export interface WeeklyTaskBatchPayload {
   endTime: string;
   category?: string | null;
   color?: WeeklyTaskColorKey;
+  showInTasks?: boolean;
   applyToAllInstances?: boolean;
   originalTitle?: string;
 }
@@ -160,6 +162,7 @@ export function validateWeeklyTaskInput(data: unknown): WeeklyTaskPayload {
     typeof payload.color === "string" && isValidWeeklyTaskColor(payload.color)
       ? payload.color
       : DEFAULT_WEEKLY_TASK_COLOR;
+  const showInTasks = payload.showInTasks === true;
 
   const dayOfWeek =
     typeof payload.dayOfWeek === "number"
@@ -192,5 +195,6 @@ export function validateWeeklyTaskInput(data: unknown): WeeklyTaskPayload {
     endTime,
     category,
     color,
+    showInTasks,
   };
 }

@@ -32,6 +32,7 @@ model Tarefa {
   ordem         Int       @default(0)
   id_usuario    Int
   usuario       Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  weeklyTaskSync WeeklyTaskTodoSync?
 
   @@map("tarefa")
 }
@@ -44,13 +45,28 @@ model WeeklyTask {
   endTime   String
   category  String?
   color     String   @default("blue")
+  showInTasks Boolean @default(false) @map("show_in_tasks")
   userId    Int      @map("id_usuario")
   user      Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  todoSyncs WeeklyTaskTodoSync[]
 
   @@index([userId, dayOfWeek, startTime])
   @@map("weekly_task")
+}
+
+model WeeklyTaskTodoSync {
+  id            String     @id @default(uuid()) @db.Uuid
+  weeklyTaskId  String     @map("weekly_task_id") @db.Uuid
+  tarefaId      Int        @unique @map("id_tarefa")
+  scheduledDate DateTime   @db.Date @map("scheduled_date")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  weeklyTask    WeeklyTask @relation(fields: [weeklyTaskId], references: [id], onDelete: Cascade)
+  tarefa        Tarefa     @relation(fields: [tarefaId], references: [id_tarefa], onDelete: Cascade)
+
+  @@unique([weeklyTaskId, scheduledDate])
+  @@map("weekly_task_todo_sync")
 }
 
 // ========== TABELAS NOVAS (NextAuth) ==========

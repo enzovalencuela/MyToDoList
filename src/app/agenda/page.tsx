@@ -114,6 +114,7 @@ export default function AgendaPage() {
         endTime: payload.endTime,
         category: payload.category,
         color: payload.color ?? DEFAULT_WEEKLY_TASK_COLOR,
+        showInTasks: payload.showInTasks ?? false,
       };
 
       const response = await fetch(`/api/agenda/${editingTask.id}`, {
@@ -159,6 +160,7 @@ export default function AgendaPage() {
             endTime: payload.endTime,
             category: payload.category,
             color: payload.color ?? DEFAULT_WEEKLY_TASK_COLOR,
+            showInTasks: payload.showInTasks ?? false,
           } satisfies WeeklyTaskPayload),
         }),
       ),
