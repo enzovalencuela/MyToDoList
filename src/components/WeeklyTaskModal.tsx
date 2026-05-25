@@ -258,10 +258,10 @@ export default function WeeklyTaskModal({
             />
             <span>
               <span className="block text-sm font-semibold text-[var(--text)]">
-                Mostrar tambÃ©m na pÃ¡gina de tarefas
+                Mostrar também na página de tarefas
               </span>
               <span className="mt-1 block text-xs text-[var(--subText)]">
-                Cria tarefas com data automaticamente para os prÃ³ximos 30 dias.
+                Cria tarefas com data automaticamente para os próximos 30 dias.
               </span>
             </span>
           </label>
