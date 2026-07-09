@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { toast, ToastContainer } from "react-toastify";
@@ -9,10 +9,11 @@ import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { Menu, Plus, Filter, ArrowUpDown, Trash2, LogOut, User, CalendarX2 } from "lucide-react";
+import { Menu, Plus, Filter, ArrowUpDown, Trash2, User, CalendarX2, Sparkles } from "lucide-react";
 
 import TaskCard, { type Todo } from "@/components/TaskCard";
 import AddTaskForm from "@/components/AddTaskForm";
+import AiRecommendationModal from "@/components/AiRecommendationModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import InputSearch from "@/components/InputSearch";
 import Sidebar from "@/components/Sidebar";
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAiRecommendation, setShowAiRecommendation] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -51,6 +53,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
+    // Match the existing authenticated page loading pattern used in this app.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (status === "authenticated") fetchTodos();
   }, [status, router, fetchTodos]);
 
@@ -95,6 +99,8 @@ export default function DashboardPage() {
       });
     }
 
+    // This page keeps the filtered list in state for optimistic drag updates.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilteredTodos([...pending, ...completed]);
   }, [allTodos, searchTerm, filterType, sortDir, selectedDate]);
 
@@ -234,6 +240,28 @@ export default function DashboardPage() {
         {/* Calendar + Search row */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
           <div className="space-y-6">
+            <button
+              onClick={() => setShowAiRecommendation(true)}
+              className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[var(--primary)]/20 bg-[var(--bgcard)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/40 hover:shadow-md"
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)]/15 text-[var(--primary)]">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-base font-bold text-[var(--text)]">
+                    O que fazer agora?
+                  </span>
+                  <span className="mt-1 block text-sm text-[var(--subText)]">
+                    Receba uma sugestao baseada nas tarefas, agenda e backlog.
+                  </span>
+                </span>
+              </span>
+              <span className="hidden rounded-full bg-[var(--subbackground)] px-4 py-2 text-xs font-bold text-[var(--text)] transition group-hover:bg-[var(--primary)] group-hover:text-white sm:inline-flex">
+                Consultar IA
+              </span>
+            </button>
+
             {/* Search + Filters bar */}
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <InputSearch onSearch={setSearchTerm} />
@@ -392,6 +420,9 @@ export default function DashboardPage() {
       {/* Modals */}
       {showAddForm && (
         <AddTaskForm onAdd={handleAddTask} onClose={() => setShowAddForm(false)} />
+      )}
+      {showAiRecommendation && (
+        <AiRecommendationModal onClose={() => setShowAiRecommendation(false)} />
       )}
       {showDeleteConfirm && (
         <ConfirmModal
