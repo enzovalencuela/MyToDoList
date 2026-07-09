@@ -1,24 +1,114 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, Clock3, Sparkles, X } from "lucide-react";
+import { BrainCircuit, Clock3, RefreshCw, Sparkles, X } from "lucide-react";
 import { toast } from "react-toastify";
 import type { RecommendationResponse } from "@/lib/recommendation";
+
+const RECOMMENDATION_CACHE_KEY = "@nexgen-tasks:last-recommendation";
 
 interface AiRecommendationModalProps {
   onClose: () => void;
 }
 
+interface CachedRecommendation {
+  generatedAt: string;
+  dateKey: string;
+  data: RecommendationResponse;
+}
+
+function getLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isRecommendationResponse(value: unknown): value is RecommendationResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const payload = value as Record<string, unknown>;
+  return (
+    typeof payload.saudacao === "string" &&
+    Array.isArray(payload.recomendacoes)
+  );
+}
+
+function parseCachedRecommendation(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<CachedRecommendation>;
+
+    if (
+      typeof parsed.generatedAt !== "string" ||
+      typeof parsed.dateKey !== "string" ||
+      !isRecommendationResponse(parsed.data)
+    ) {
+      return null;
+    }
+
+    return parsed as CachedRecommendation;
+  } catch {
+    return null;
+  }
+}
+
+function formatGeneratedAt(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `Gerado hoje as ${date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
+
+function getValidCachedRecommendation() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const cachedRecommendation = parseCachedRecommendation(
+    window.localStorage.getItem(RECOMMENDATION_CACHE_KEY),
+  );
+
+  if (!cachedRecommendation) {
+    return null;
+  }
+
+  const todayKey = getLocalDateKey(new Date());
+
+  if (cachedRecommendation.dateKey !== todayKey) {
+    window.localStorage.removeItem(RECOMMENDATION_CACHE_KEY);
+    return null;
+  }
+
+  return cachedRecommendation;
+}
+
 export default function AiRecommendationModal({
   onClose,
 }: AiRecommendationModalProps) {
+  const [cachedRecommendation] = useState(getValidCachedRecommendation);
   const [loading, setLoading] = useState(false);
   const [recommendation, setRecommendation] =
-    useState<RecommendationResponse | null>(null);
+    useState<RecommendationResponse | null>(cachedRecommendation?.data ?? null);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(
+    cachedRecommendation?.generatedAt ?? null,
+  );
 
   async function fetchRecommendation() {
     setLoading(true);
     setRecommendation(null);
+    setGeneratedAt(null);
 
     const response = await fetch("/api/recommendation");
     const result = (await response.json()) as RecommendationResponse & {
@@ -32,7 +122,19 @@ export default function AiRecommendationModal({
       return;
     }
 
+    const now = new Date();
+    const cachePayload: CachedRecommendation = {
+      generatedAt: now.toISOString(),
+      dateKey: getLocalDateKey(now),
+      data: result,
+    };
+
+    window.localStorage.setItem(
+      RECOMMENDATION_CACHE_KEY,
+      JSON.stringify(cachePayload),
+    );
     setRecommendation(result);
+    setGeneratedAt(cachePayload.generatedAt);
   }
 
   return (
@@ -104,6 +206,11 @@ export default function AiRecommendationModal({
           {recommendation && (
             <div>
               <div className="rounded-3xl border border-[var(--primary)]/20 bg-[var(--primary)]/10 p-5">
+                {generatedAt && (
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--subText)]">
+                    {formatGeneratedAt(generatedAt)}
+                  </p>
+                )}
                 <p className="text-sm font-semibold leading-6 text-[var(--text)]">
                   {recommendation.saudacao}
                 </p>
@@ -143,7 +250,7 @@ export default function AiRecommendationModal({
                 onClick={fetchRecommendation}
                 className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-5 py-3 text-sm font-bold text-[var(--text)] transition hover:-translate-y-0.5"
               >
-                <Sparkles className="h-4 w-4" /> Gerar de novo
+                <RefreshCw className="h-4 w-4" /> Atualizar recomendacoes
               </button>
             </div>
           )}
