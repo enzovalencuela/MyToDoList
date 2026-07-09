@@ -13,6 +13,7 @@ import {
   Info,
   ListTodo,
   CalendarDays,
+  BookOpenCheck,
   type LucideIcon,
 } from "lucide-react";
 import ThemeSwitch from "./ThemeSwitch";
@@ -32,6 +33,7 @@ interface NavItem {
 const primaryNavItems: NavItem[] = [
   { label: "Tarefas", href: "/dashboard", icon: ListTodo },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
+  { label: "Meu Backlog", href: "/backlog", icon: BookOpenCheck },
 ];
 
 const secondaryNavItems: NavItem[] = [

@@ -18,6 +18,7 @@ model Usuario {
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
   weeklyTasks  WeeklyTask[]
+  backlogGoals BacklogGoal[]
 
   @@map("usuario")
 }
@@ -67,6 +68,21 @@ model WeeklyTaskTodoSync {
 
   @@unique([weeklyTaskId, scheduledDate])
   @@map("weekly_task_todo_sync")
+}
+
+model BacklogGoal {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  category    String
+  status      String   @default("NOT_STARTED")
+  priority    String   @default("MEDIUM")
+  userId      Int      @map("id_usuario")
+  user        Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId, status, priority])
+  @@map("backlog_goal")
 }
 
 // ========== TABELAS NOVAS (NextAuth) ==========
