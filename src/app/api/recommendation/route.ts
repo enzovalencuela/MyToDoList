@@ -77,6 +77,7 @@ export async function GET() {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
+  const modelName = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
   if (!apiKey) {
     return NextResponse.json(
@@ -173,7 +174,7 @@ ${JSON.stringify(
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: modelName,
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.4,
