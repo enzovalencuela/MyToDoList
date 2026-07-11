@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { ToastContainer } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
+
+import PushNotificationSettings from "@/components/PushNotificationSettings";
 import ThemeSwitch from "@/components/ThemeSwitch";
 
 export default function SettingsPage() {
   return (
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
+      <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
       <Link href="/dashboard" className="inline-flex items-center gap-2 mb-6 gradient-text font-bold hover:underline">
         <ArrowLeft className="w-5 h-5" /> Voltar
       </Link>
@@ -20,6 +25,7 @@ export default function SettingsPage() {
           </div>
           <ThemeSwitch />
         </div>
+        <PushNotificationSettings />
       </div>
     </div>
   );

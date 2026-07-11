@@ -15,6 +15,7 @@ model Usuario {
   email        String    @unique
   firebase_uid String?   @unique
   foto_perfil  String?
+  pushSubscription String? @map("push_subscription")
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
   weeklyTasks  WeeklyTask[]
