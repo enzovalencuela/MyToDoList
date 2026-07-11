@@ -33,7 +33,7 @@ interface NavItem {
 const primaryNavItems: NavItem[] = [
   { label: "Tarefas", href: "/dashboard", icon: ListTodo },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
-  { label: "Meu Backlog", href: "/backlog", icon: BookOpenCheck },
+  { label: "Backlog", href: "/backlog", icon: BookOpenCheck },
 ];
 
 const secondaryNavItems: NavItem[] = [
