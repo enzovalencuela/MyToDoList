@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import {
-  ArrowLeft,
-  ArrowRight,
   BookOpen,
+  GripVertical,
   Menu,
   Pencil,
   Plus,
@@ -15,6 +14,20 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import "react-toastify/dist/ReactToastify.css";
 
 import BacklogGoalModal from "@/components/BacklogGoalModal";
@@ -48,16 +61,184 @@ const statusAccent: Record<BacklogStatus, string> = {
   COMPLETED: "bg-emerald-400",
 };
 
-function getPreviousStatus(status: BacklogStatus): BacklogStatus | null {
-  if (status === "COMPLETED") return "IN_PROGRESS";
-  if (status === "IN_PROGRESS") return "NOT_STARTED";
-  return null;
+function isBacklogStatus(value: unknown): value is BacklogStatus {
+  return BACKLOG_STATUSES.some((statusItem) => statusItem.value === value);
 }
 
-function getNextStatus(status: BacklogStatus): BacklogStatus | null {
-  if (status === "NOT_STARTED") return "IN_PROGRESS";
-  if (status === "IN_PROGRESS") return "COMPLETED";
-  return null;
+function BacklogGoalCard({
+  dragging = false,
+  goal,
+  onDelete,
+  onEdit,
+}: {
+  dragging?: boolean;
+  goal: BacklogGoalItem;
+  onDelete?: (goal: BacklogGoalItem) => void;
+  onEdit?: (goal: BacklogGoalItem) => void;
+}) {
+  return (
+    <article
+      className={`rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] p-4 shadow-sm transition ${
+        dragging
+          ? "opacity-80 shadow-xl ring-2 ring-[var(--primary)]/30"
+          : "hover:-translate-y-0.5 hover:border-[var(--primary)]/35"
+      }`}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="break-words text-base font-bold leading-6 text-[var(--text)]">
+            {goal.title}
+          </h3>
+          {goal.description && (
+            <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-[var(--subText)]">
+              {goal.description}
+            </p>
+          )}
+        </div>
+        <BookOpen className="mt-1 h-5 w-5 flex-shrink-0 text-[var(--primary)]" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-bold ${
+            categoryStyles[goal.category] ?? categoryStyles.CURSO
+          }`}
+        >
+          {getBacklogCategoryLabel(goal.category as never)}
+        </span>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
+            priorityStyles[goal.priority] ?? priorityStyles.MEDIUM
+          }`}
+        >
+          {getBacklogPriorityLabel(goal.priority as never)}
+        </span>
+      </div>
+
+      {(onEdit || onDelete) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full bg-[var(--subbackground)] text-[var(--subText)] active:cursor-grabbing"
+            title="Arrastar"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(goal)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--subbackground)] text-[var(--text)] transition hover:-translate-y-0.5"
+              title="Editar"
+              type="button"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(goal)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-500/12 text-red-500 transition hover:-translate-y-0.5 hover:bg-red-500/18"
+              title="Deletar"
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function DraggableBacklogGoalCard({
+  goal,
+  onDelete,
+  onEdit,
+}: {
+  goal: BacklogGoalItem;
+  onDelete: (goal: BacklogGoalItem) => void;
+  onEdit: (goal: BacklogGoalItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: goal.id,
+      data: {
+        goalId: goal.id,
+        status: goal.status,
+      },
+    });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.35 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <BacklogGoalCard goal={goal} onDelete={onDelete} onEdit={onEdit} />
+    </div>
+  );
+}
+
+function BacklogColumn({
+  goals,
+  isDraggingOver,
+  onDelete,
+  onEdit,
+  statusValue,
+}: {
+  goals: BacklogGoalItem[];
+  isDraggingOver: boolean;
+  onDelete: (goal: BacklogGoalItem) => void;
+  onEdit: (goal: BacklogGoalItem) => void;
+  statusValue: BacklogStatus;
+}) {
+  const statusItem = BACKLOG_STATUSES.find((item) => item.value === statusValue);
+  const { setNodeRef } = useDroppable({ id: statusValue });
+
+  return (
+    <div
+      className={`min-h-[420px] rounded-[28px] border p-4 shadow-[0_22px_70px_rgba(15,39,64,0.10)] backdrop-blur-xl transition ${
+        isDraggingOver
+          ? "border-[var(--primary)]/55 bg-[var(--primary)]/10"
+          : "border-white/30 bg-[var(--bgcard)]/82"
+      }`}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className={`h-3 w-3 rounded-full ${statusAccent[statusValue]}`} />
+          <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text)]">
+            {statusItem?.label}
+          </h2>
+        </div>
+        <span className="rounded-full bg-[var(--subbackground)] px-3 py-1 text-xs font-bold text-[var(--subText)]">
+          {goals.length}
+        </span>
+      </div>
+
+      <div
+        ref={setNodeRef}
+        className={`min-h-[320px] space-y-3 rounded-2xl transition ${
+          isDraggingOver ? "bg-white/5 p-2" : ""
+        }`}
+      >
+        {goals.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[var(--subbackground)] px-4 py-10 text-center text-sm text-[var(--subText)]">
+            Nenhum objetivo aqui.
+          </div>
+        ) : (
+          goals.map((goal) => (
+            <DraggableBacklogGoalCard
+              key={goal.id}
+              goal={goal}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function BacklogPage() {
@@ -69,6 +250,11 @@ export default function BacklogPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<BacklogGoalItem | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<BacklogGoalItem | null>(null);
+  const [activeGoal, setActiveGoal] = useState<BacklogGoalItem | null>(null);
+  const [activeOverStatus, setActiveOverStatus] = useState<BacklogStatus | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   const fetchBacklogGoals = useCallback(async () => {
     const response = await fetch("/api/backlog");
@@ -133,25 +319,60 @@ export default function BacklogPage() {
     toast.success(editingGoal ? "Objetivo atualizado!" : "Objetivo criado!");
   }
 
-  async function handleStatusChange(goal: BacklogGoalItem, statusValue: BacklogStatus) {
-    const response = await fetch(`/api/backlog/${goal.id}`, {
+  function handleDragStart(event: DragStartEvent) {
+    const goal = goals.find((item) => item.id === event.active.id);
+    setActiveGoal(goal ?? null);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    setActiveOverStatus(
+      isBacklogStatus(event.over?.id) ? event.over.id : null,
+    );
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const goalId = String(event.active.id);
+    const nextStatus = event.over?.id;
+    const draggedGoal = goals.find((goal) => goal.id === goalId);
+
+    setActiveGoal(null);
+    setActiveOverStatus(null);
+
+    if (!draggedGoal || !isBacklogStatus(nextStatus)) {
+      return;
+    }
+
+    if (draggedGoal.status === nextStatus) {
+      return;
+    }
+
+    const previousGoals = goals;
+    const nextGoals = goals.map((goal) =>
+      goal.id === draggedGoal.id ? { ...goal, status: nextStatus } : goal,
+    );
+
+    setGoals(nextGoals);
+
+    const response = await fetch(`/api/backlog/${draggedGoal.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: goal.title,
-        description: goal.description,
-        category: goal.category,
-        priority: goal.priority,
-        status: statusValue,
+        title: draggedGoal.title,
+        description: draggedGoal.description,
+        category: draggedGoal.category,
+        priority: draggedGoal.priority,
+        status: nextStatus,
       } satisfies BacklogGoalPayload),
     });
 
     if (!response.ok) {
+      setGoals(previousGoals);
       toast.error("Nao foi possivel mover o objetivo.");
       return;
     }
 
     await fetchBacklogGoals();
+    router.refresh();
   }
 
   async function handleDeleteConfirmed() {
@@ -267,134 +488,39 @@ export default function BacklogPage() {
             </button>
           </section>
         ) : (
-          <section className="grid gap-4 xl:grid-cols-3">
-            {BACKLOG_STATUSES.map((statusItem) => {
-              const columnGoals = goals.filter(
-                (goal) => goal.status === statusItem.value,
-              );
-
-              return (
-                <div
+          <DndContext
+            sensors={sensors}
+            collisionDetection={pointerWithin}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => {
+              setActiveGoal(null);
+              setActiveOverStatus(null);
+            }}
+          >
+            <section className="grid gap-4 xl:grid-cols-3">
+              {BACKLOG_STATUSES.map((statusItem) => (
+                <BacklogColumn
                   key={statusItem.value}
-                  className="min-h-[420px] rounded-[28px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.10)] backdrop-blur-xl"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`h-3 w-3 rounded-full ${
-                          statusAccent[statusItem.value]
-                        }`}
-                      />
-                      <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text)]">
-                        {statusItem.label}
-                      </h2>
-                    </div>
-                    <span className="rounded-full bg-[var(--subbackground)] px-3 py-1 text-xs font-bold text-[var(--subText)]">
-                      {columnGoals.length}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {columnGoals.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-[var(--subbackground)] px-4 py-10 text-center text-sm text-[var(--subText)]">
-                        Nenhum objetivo aqui.
-                      </div>
-                    ) : (
-                      columnGoals.map((goal) => {
-                        const previousStatus = getPreviousStatus(
-                          goal.status as BacklogStatus,
-                        );
-                        const nextStatus = getNextStatus(
-                          goal.status as BacklogStatus,
-                        );
-
-                        return (
-                          <article
-                            key={goal.id}
-                            className="rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/35"
-                          >
-                            <div className="mb-3 flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <h3 className="break-words text-base font-bold leading-6 text-[var(--text)]">
-                                  {goal.title}
-                                </h3>
-                                {goal.description && (
-                                  <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-[var(--subText)]">
-                                    {goal.description}
-                                  </p>
-                                )}
-                              </div>
-                              <BookOpen className="mt-1 h-5 w-5 flex-shrink-0 text-[var(--primary)]" />
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              <span
-                                className={`rounded-full border px-3 py-1 text-xs font-bold ${
-                                  categoryStyles[goal.category] ??
-                                  categoryStyles.CURSO
-                                }`}
-                              >
-                                {getBacklogCategoryLabel(goal.category as never)}
-                              </span>
-                              <span
-                                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                                  priorityStyles[goal.priority] ??
-                                  priorityStyles.MEDIUM
-                                }`}
-                              >
-                                {getBacklogPriorityLabel(goal.priority as never)}
-                              </span>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap items-center gap-2">
-                              {previousStatus && (
-                                <button
-                                  onClick={() =>
-                                    handleStatusChange(goal, previousStatus)
-                                  }
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--subbackground)] text-[var(--text)] transition hover:-translate-y-0.5"
-                                  title="Voltar status"
-                                >
-                                  <ArrowLeft className="h-4 w-4" />
-                                </button>
-                              )}
-                              {nextStatus && (
-                                <button
-                                  onClick={() =>
-                                    handleStatusChange(goal, nextStatus)
-                                  }
-                                  className="inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-4 py-2 text-xs font-bold text-[var(--text)] transition hover:-translate-y-0.5"
-                                >
-                                  {nextStatus === "IN_PROGRESS"
-                                    ? "Iniciar"
-                                    : "Concluir"}
-                                  <ArrowRight className="h-4 w-4" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => openEditModal(goal)}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--subbackground)] text-[var(--text)] transition hover:-translate-y-0.5"
-                                title="Editar"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => setGoalToDelete(goal)}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-500/12 text-red-500 transition hover:-translate-y-0.5 hover:bg-red-500/18"
-                                title="Deletar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </article>
-                        );
-                      })
-                    )}
-                  </div>
+                  goals={goals.filter(
+                    (goal) => goal.status === statusItem.value,
+                  )}
+                  isDraggingOver={activeOverStatus === statusItem.value}
+                  onDelete={setGoalToDelete}
+                  onEdit={openEditModal}
+                  statusValue={statusItem.value}
+                />
+              ))}
+            </section>
+            <DragOverlay>
+              {activeGoal ? (
+                <div className="w-[min(360px,calc(100vw-48px))]">
+                  <BacklogGoalCard goal={activeGoal} dragging />
                 </div>
-              );
-            })}
-          </section>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
       </main>
 
