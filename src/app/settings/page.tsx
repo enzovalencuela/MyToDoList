@@ -1,14 +1,15 @@
-"use client";
-
 import Link from "next/link";
 import { ToastContainer } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
+import { getNotificationSettings } from "@/app/settings/actions";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import ThemeSwitch from "@/components/ThemeSwitch";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const notificationSettings = await getNotificationSettings();
+
   return (
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
@@ -25,7 +26,7 @@ export default function SettingsPage() {
           </div>
           <ThemeSwitch />
         </div>
-        <PushNotificationSettings />
+        <PushNotificationSettings initialSettings={notificationSettings} />
       </div>
     </div>
   );

@@ -16,10 +16,13 @@ model Usuario {
   firebase_uid String?   @unique
   foto_perfil  String?
   pushSubscription String? @map("push_subscription")
+  lastActiveAt DateTime? @map("last_active_at")
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
   weeklyTasks  WeeklyTask[]
   backlogGoals BacklogGoal[]
+  notificationSettings NotificationSettings?
+  notificationDeliveries NotificationDelivery[]
 
   @@map("usuario")
 }
@@ -84,6 +87,32 @@ model BacklogGoal {
 
   @@index([userId, status, priority])
   @@map("backlog_goal")
+}
+
+model NotificationSettings {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             Int      @unique @map("id_usuario")
+  agendaReminders    Boolean  @default(true) @map("agenda_reminders")
+  taskDeadlines      Boolean  @default(true) @map("task_deadlines")
+  aiInactivityAlerts Boolean  @default(false) @map("ai_inactivity_alerts")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  user               Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+model NotificationDelivery {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       Int      @map("id_usuario")
+  type         String
+  referenceKey String   @map("reference_key")
+  deliveredAt  DateTime @default(now()) @map("delivered_at")
+  user         Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
+
+  @@unique([userId, type, referenceKey])
+  @@index([type, deliveredAt])
+  @@map("notification_delivery")
 }
 
 // ========== TABELAS NOVAS (NextAuth) ==========

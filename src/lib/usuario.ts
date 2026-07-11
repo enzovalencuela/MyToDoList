@@ -18,7 +18,13 @@ export async function getOrCreateUsuario() {
       data: {
         email: session.user.email,
         name: session.user.name ?? null,
+        lastActiveAt: new Date(),
       },
+    });
+  } else {
+    usuario = await prisma.usuario.update({
+      where: { id_usuario: usuario.id_usuario },
+      data: { lastActiveAt: new Date() },
     });
   }
 
