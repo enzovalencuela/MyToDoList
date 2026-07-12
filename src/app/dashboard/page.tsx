@@ -120,11 +120,23 @@ export default function DashboardPage() {
   }
 
   async function handleToggle(id: string, completed: boolean) {
-    await fetch("/api/todos", {
+    const res = await fetch("/api/todos", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, completed: !completed }),
     });
+
+    if (res.ok) {
+      const data = await res.json();
+
+      if (data.gamification) {
+        window.dispatchEvent(
+          new CustomEvent("gamification:update", { detail: data.gamification }),
+        );
+        toast.success(`+10 XP · Nv. ${data.gamification.level}`);
+      }
+    }
+
     setAllTodos((prev) =>
       prev.map((t) => (t.id === id ? { ...t, completed: !completed } : t))
     );

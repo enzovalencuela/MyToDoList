@@ -8,6 +8,7 @@ import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ConfirmModal from "@/components/ConfirmModal";
+import GamificationProgress from "@/components/GamificationProgress";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -114,6 +115,7 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
+        <GamificationProgress />
       </div>
 
       {/* Change password (only for credentials users) */}

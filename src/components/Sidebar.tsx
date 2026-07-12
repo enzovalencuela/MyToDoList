@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ThemeSwitch from "./ThemeSwitch";
 import NexgenLogo from "./NexgenLogo";
+import GamificationProgress from "./GamificationProgress";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -135,6 +136,7 @@ function SidebarContent({
             <p className="truncate text-xs text-[var(--subText)]">{user?.email}</p>
           </div>
         </div>
+        <GamificationProgress />
       </div>
 
       <nav className="flex-1 space-y-6 px-4 py-5">

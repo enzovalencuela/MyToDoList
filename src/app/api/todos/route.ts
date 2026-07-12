@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { applyTaskCompletionReward } from "@/lib/gamification";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
 
@@ -80,13 +81,25 @@ export async function PUT(req: Request) {
   if (priority !== undefined) data.prioridade = priority;
   if (dueDate !== undefined) data.data_prazo = dueDate ? new Date(dueDate) : null;
 
+  const existingTask = completed === true
+    ? await prisma.tarefa.findFirst({
+        where: { id_tarefa: Number(id), id_usuario },
+        select: { estado_tarefa: true },
+      })
+    : null;
+
   const result = await prisma.tarefa.updateMany({
     where: { id_tarefa: Number(id), id_usuario },
     data,
   });
 
   if (result.count === 0) return NextResponse.json({ error: "Tarefa nÃ£o encontrada" }, { status: 404 });
-  return NextResponse.json({ success: true });
+
+  const gamification = completed === true && existingTask?.estado_tarefa !== "Finalizada"
+    ? await applyTaskCompletionReward(id_usuario)
+    : null;
+
+  return NextResponse.json({ success: true, gamification });
 }
 
 export async function DELETE(req: Request) {
