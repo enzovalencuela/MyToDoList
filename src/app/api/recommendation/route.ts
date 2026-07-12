@@ -4,6 +4,7 @@ import type { RecommendationResponse } from "@/lib/recommendation";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -156,7 +157,9 @@ export async function GET() {
   const purchasedAiQueries = userProfile?.purchasedAiQueries ?? 0;
 
   // if user is admin, bypass daily limit entirely (role synced on Usuario)
-  const isAdmin = userProfile?.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = userProfile?.role === "USER_ADMIN" && adminModeCookie;
 
   if (!isAdmin && freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
     return NextResponse.json(

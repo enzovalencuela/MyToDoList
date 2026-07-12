@@ -180,7 +180,7 @@ export default function LojaPage() {
   }
 
   async function handleBuyXpMultiplier() {
-    if (state.level < 2) {
+    if (!state.isAdmin && state.level < 2) {
       toast.error("O multiplicador desbloqueia a partir do nível 2");
       return;
     }
@@ -416,6 +416,19 @@ export default function LojaPage() {
 
         <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
         <main className="mx-auto flex flex-col gap-6 max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-(--text)">Loja</h1>
+              <p className="text-sm text-(--subText)">
+                Compre itens e upgrades com XP
+              </p>
+            </div>
+            {state.isAdmin && (
+              <div className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500/90 px-3 py-1 text-xs font-semibold text-white">
+                [ TESTES INTERNOS ]
+              </div>
+            )}
+          </div>
           <section className="grid gap-4 lg:grid-cols-3">
             <article className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
               <div className="flex items-center justify-between">

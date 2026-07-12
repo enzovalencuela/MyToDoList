@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 // role is now stored on Usuario; no server session lookup needed here
 
 const VALID_THEMES = ["default", "emerald", "cyberpunk", "dracula"] as const;
@@ -40,7 +41,9 @@ export async function purchaseTheme(theme: string) {
           ? 800
           : 0;
   // admin bypass: allow testing without cost
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   if (!isAdmin && cost > 0 && usuario.xpPoints < cost) {
     return { success: false, error: "XP insuficiente" };
@@ -114,7 +117,9 @@ export async function purchaseStreakFreeze() {
     return { success: false, error: "Usuário não encontrado" };
   }
 
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   const cost = 800;
   if (!isAdmin && usuario.xpPoints < cost) {
@@ -165,7 +170,9 @@ export async function purchaseAdvancedAi() {
     return { success: false, error: "Usuário não encontrado" };
   }
 
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   const cost = 150;
   if (!isAdmin && usuario.xpPoints < cost) {

@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Lock,
   Trash2,
@@ -32,6 +32,20 @@ export default function ProfilePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isAdminRole, setIsAdminRole] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/gamification");
+        if (!res.ok) return;
+        const data = await res.json();
+        setIsAdminRole(Boolean(data.isAdminRole));
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
 
   // Check if user logged in via credentials (has password)
   const isCredentialsUser = !session?.user?.image; // Google users have image
@@ -158,6 +172,13 @@ export default function ProfilePage() {
               <h2 className="text-xl font-bold text-[var(--text)]">
                 {session?.user?.name || "Usuário"}
               </h2>
+              {isAdminRole && (
+                <div className="mt-1">
+                  <span className="rounded-full bg-red-800/70 px-2 py-0.5 text-xs font-semibold text-pink-400">
+                    ADMIN
+                  </span>
+                </div>
+              )}
               <p className="flex items-center gap-1.5 text-sm text-[var(--subText)]">
                 <Mail className="w-4 h-4" />
                 {session?.user?.email}

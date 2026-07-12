@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 export async function POST() {
   const id_usuario = await getUsuarioId();
@@ -25,7 +26,9 @@ export async function POST() {
     );
   }
 
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   if (!isAdmin && usuario.level < 2) {
     return NextResponse.json({ error: "Requer nível 2" }, { status: 400 });

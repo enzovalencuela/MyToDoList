@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildGamificationStats } from "@/lib/gamification";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 function getLocalDateKey(date: Date) {
   const year = date.getFullYear();
@@ -52,7 +53,10 @@ export async function GET() {
       ? usuario.lastAiResponse
       : null;
 
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const isAdminRole = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = isAdminRole && adminModeCookie;
 
   return NextResponse.json({
     ...buildGamificationStats(usuario),
@@ -66,6 +70,7 @@ export async function GET() {
     purchasedAiQueries: usuario.purchasedAiQueries,
     lastAiResponse,
     lastAiQueryAt: usuario.lastAiQueryAt,
+    isAdminRole,
     isAdmin,
   });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   const id_usuario = await getUsuarioId();
@@ -26,7 +27,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const isAdmin = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   const cost = 500;
 

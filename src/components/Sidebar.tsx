@@ -21,6 +21,7 @@ import {
 import ThemeSwitch from "./ThemeSwitch";
 import NexgenLogo from "./NexgenLogo";
 import GamificationProgress from "./GamificationProgress";
+import { useEffect, useState } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -117,6 +118,24 @@ function SidebarContent({
     | { name?: string | null; email?: string | null; image?: string | null }
     | undefined;
 }) {
+  const [isAdminRole, setIsAdminRole] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/gamification");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) setIsAdminRole(Boolean(data.isAdminRole));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-4 py-4">
@@ -156,9 +175,16 @@ function SidebarContent({
             <p className="truncate text-sm font-bold text-[var(--text)]">
               {user?.name || "Usuário"}
             </p>
-            <p className="truncate text-[11px] text-[var(--subText)]">
-              {user?.email}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-[11px] text-[var(--subText)]">
+                {user?.email}
+              </p>
+              {isAdminRole && (
+                <span className="ml-1 rounded-full bg-red-800/70 px-2 py-0.5 text-xs font-semibold text-pink-400">
+                  ADMIN
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="mt-3">
