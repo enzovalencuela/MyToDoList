@@ -367,6 +367,7 @@ export default function LojaPage() {
           autoClose={3000}
           theme="colored"
         />
+
         <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:hidden">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -406,8 +407,7 @@ export default function LojaPage() {
         </header>
 
         <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
-
-        <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
+        <main className="mx-auto flex flex-col gap-6 max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
           <section className="grid gap-4 lg:grid-cols-3">
             <article className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
               <div className="flex items-center justify-between">
