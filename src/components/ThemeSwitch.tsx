@@ -22,7 +22,9 @@ export default function ThemeSwitch() {
       ) : (
         <Moon className="w-5 h-5 text-[var(--primary)]" />
       )}
-      <span className="text-sm hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
+      <span className="text-sm hidden sm:inline">
+        {theme === "dark" ? "Escuro" : "Claro"}
+      </span>
     </button>
   );
 }

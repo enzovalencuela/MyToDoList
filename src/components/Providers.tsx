@@ -7,7 +7,7 @@ import SplashScreen from "./SplashScreen";
 
 function ThemeSync({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     void (async () => {
@@ -18,10 +18,9 @@ function ThemeSync({ children }: { children: React.ReactNode }) {
       try {
         const res = await fetch("/api/theme");
         const data = await res.json();
+
         if (data.currentTheme && data.currentTheme !== "default") {
           setTheme(data.currentTheme);
-        } else if (theme !== "light") {
-          setTheme("light");
         }
       } catch {
         // ignore theme sync failures
