@@ -137,11 +137,11 @@ export default function ProfilePage() {
 
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
+      <main className="flex flex-col gap-6 mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
         <h1 className="text-3xl font-bold gradient-text mb-8">Meu Perfil</h1>
 
         {/* User info card */}
-        <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md mb-6">
+        <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white overflow-hidden">
               {session?.user?.image ? (
