@@ -15,6 +15,7 @@ import {
   CalendarDays,
   BookOpenCheck,
   Trophy,
+  ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
 import ThemeSwitch from "./ThemeSwitch";
@@ -32,16 +33,23 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-const primaryNavItems: NavItem[] = [
+const workspaceNavItems: NavItem[] = [
   { label: "Tarefas", href: "/dashboard", icon: ListTodo },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
   { label: "Backlog", href: "/backlog", icon: BookOpenCheck },
 ];
 
-const secondaryNavItems: NavItem[] = [
-  { label: "Perfil", href: "/profile", icon: User },
+const gamificationNavItems: NavItem[] = [
   { label: "Conquistas", href: "/conquistas", icon: Trophy },
+  { label: "Loja de XP", href: "/loja", icon: ShoppingBag },
+];
+
+const accountNavItems: NavItem[] = [
+  { label: "Perfil", href: "/profile", icon: User },
   { label: "Configurações", href: "/settings", icon: Settings },
+];
+
+const supportNavItems: NavItem[] = [
   { label: "Sobre", href: "/about", icon: Info },
   { label: "Ajuda", href: "/help", icon: HelpCircle },
 ];
@@ -61,10 +69,10 @@ function SidebarSection({
 }) {
   return (
     <div>
-      <p className="px-4 pb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--subText)]">
+      <p className="px-4 pb-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
         {label}
       </p>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {items.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -74,14 +82,14 @@ function SidebarSection({
               key={item.href}
               href={item.href}
               onClick={mobile ? onClose : undefined}
-              className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+              className={`group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
                 active
                   ? "bg-[var(--subbackground)] text-[var(--primary)] shadow-sm"
                   : "text-[var(--text)] hover:bg-[var(--subbackground)]"
               }`}
             >
               <item.icon
-                className={`h-5 w-5 ${
+                className={`h-4 w-4 ${
                   active
                     ? "text-[var(--primary)]"
                     : "text-[var(--subText)] group-hover:text-[var(--text)]"
@@ -111,12 +119,12 @@ function SidebarContent({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between p-5">
+      <div className="flex items-center justify-between px-4 py-4">
         <div className="flex items-center gap-3">
-          <NexgenLogo className="h-9 w-9" />
+          <NexgenLogo className="h-8 w-8" />
           <div>
             <p className="text-sm font-bold text-[var(--text)]">Nexgen Tasks</p>
-            <p className="text-xs text-[var(--subText)]">
+            <p className="text-[11px] text-[var(--subText)]">
               Organize melhor seu dia
             </p>
           </div>
@@ -131,9 +139,9 @@ function SidebarContent({
         )}
       </div>
 
-      <div className="mx-4 rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[var(--subbackground)] text-[var(--text)]">
+      <div className="mx-3 rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] px-3 py-3 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-[var(--subbackground)] text-[var(--text)]">
             {user?.image ? (
               <img
                 src={user.image}
@@ -141,47 +149,73 @@ function SidebarContent({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <User className="h-7 w-7" />
+              <User className="h-5 w-5" />
             )}
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-[var(--text)]">
               {user?.name || "Usuário"}
             </p>
-            <p className="truncate text-xs text-[var(--subText)]">
+            <p className="truncate text-[11px] text-[var(--subText)]">
               {user?.email}
             </p>
           </div>
         </div>
-        <GamificationProgress />
+        <div className="mt-3">
+          <GamificationProgress />
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-6 px-4 py-5">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
         <SidebarSection
           label="Workspace"
-          items={primaryNavItems}
+          items={workspaceNavItems}
+          pathname={pathname}
+          mobile={mobile}
+          onClose={onClose}
+        />
+        <SidebarSection
+          label="Gamificação"
+          items={gamificationNavItems}
           pathname={pathname}
           mobile={mobile}
           onClose={onClose}
         />
         <SidebarSection
           label="Conta"
-          items={secondaryNavItems}
+          items={accountNavItems}
           pathname={pathname}
           mobile={mobile}
           onClose={onClose}
         />
       </nav>
 
-      <div className="space-y-3 border-t border-[var(--subbackground)] p-4">
-        <div className="rounded-2xl bg-[var(--background)] px-2 py-2 text-[var(--text)]">
+      <div className="border-t border-[var(--subbackground)] px-3 py-3">
+        <div className="mb-2 flex items-center justify-center gap-2 rounded-xl bg-[var(--background)] px-2 py-2 text-[var(--text)]">
           <ThemeSwitch />
+        </div>
+        <div className="flex items-center justify-between rounded-xl bg-[var(--background)] px-3 py-2 text-[11px] text-[var(--subText)]">
+          {supportNavItems.map((item) => {
+            const active =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={mobile ? onClose : undefined}
+                className={`flex items-center gap-1.5 transition ${active ? "font-semibold text-[var(--primary)]" : "hover:text-[var(--text)]"}`}
+              >
+                <item.icon className="h-3.5 w-3.5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="h-4 w-4" />
           <span>Sair</span>
         </button>
       </div>
