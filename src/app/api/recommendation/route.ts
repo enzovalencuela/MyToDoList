@@ -142,7 +142,7 @@ export async function GET() {
           freeAiQueriesUsedToday: true,
           purchasedAiQueries: true,
           lastAiQueryAt: true,
-          email: true,
+          role: true,
         },
       }),
     ]);
@@ -155,15 +155,8 @@ export async function GET() {
     : (userProfile?.freeAiQueriesUsedToday ?? 0);
   const purchasedAiQueries = userProfile?.purchasedAiQueries ?? 0;
 
-  // if user is admin, bypass daily limit entirely
-  let isAdmin = false;
-  if (userProfile?.email) {
-    const nextUser = await prisma.user.findUnique({
-      where: { email: userProfile.email },
-      select: { role: true },
-    });
-    isAdmin = nextUser?.role === "USER_ADMIN";
-  }
+  // if user is admin, bypass daily limit entirely (role synced on Usuario)
+  const isAdmin = userProfile?.role === "USER_ADMIN";
 
   if (!isAdmin && freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
     return NextResponse.json(

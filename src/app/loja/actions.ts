@@ -2,8 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+// role is now stored on Usuario; no server session lookup needed here
 
 const VALID_THEMES = ["default", "emerald", "cyberpunk", "dracula"] as const;
 
@@ -24,6 +23,7 @@ export async function purchaseTheme(theme: string) {
       unlockedThemes: true,
       currentTheme: true,
       email: true,
+      role: true,
     },
   });
 
@@ -40,14 +40,7 @@ export async function purchaseTheme(theme: string) {
           ? 800
           : 0;
   // admin bypass: allow testing without cost
-  const session = await getServerSession(authOptions);
-  const nextUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true },
-      })
-    : null;
-  const isAdmin = nextUser?.role === "USER_ADMIN";
+  const isAdmin = usuario.role === "USER_ADMIN";
 
   if (!isAdmin && cost > 0 && usuario.xpPoints < cost) {
     return { success: false, error: "XP insuficiente" };
@@ -114,21 +107,14 @@ export async function purchaseStreakFreeze() {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    select: { xpPoints: true, streakFrozenUntil: true },
+    select: { xpPoints: true, streakFrozenUntil: true, role: true },
   });
 
   if (!usuario) {
     return { success: false, error: "Usuário não encontrado" };
   }
 
-  const session = await getServerSession(authOptions);
-  const nextUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true },
-      })
-    : null;
-  const isAdmin = nextUser?.role === "USER_ADMIN";
+  const isAdmin = usuario.role === "USER_ADMIN";
 
   const cost = 800;
   if (!isAdmin && usuario.xpPoints < cost) {
@@ -171,6 +157,7 @@ export async function purchaseAdvancedAi() {
       advancedAiUses: true,
       purchasedAiQueries: true,
       email: true,
+      role: true,
     },
   });
 
@@ -178,14 +165,7 @@ export async function purchaseAdvancedAi() {
     return { success: false, error: "Usuário não encontrado" };
   }
 
-  const session = await getServerSession(authOptions);
-  const nextUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true },
-      })
-    : null;
-  const isAdmin = nextUser?.role === "USER_ADMIN";
+  const isAdmin = usuario.role === "USER_ADMIN";
 
   const cost = 150;
   if (!isAdmin && usuario.xpPoints < cost) {

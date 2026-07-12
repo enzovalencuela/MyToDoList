@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const id_usuario = await getUsuarioId();
@@ -17,7 +15,12 @@ export async function POST(req: Request) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    select: { xpPoints: true, unlockedThemes: true, currentTheme: true },
+    select: {
+      xpPoints: true,
+      unlockedThemes: true,
+      currentTheme: true,
+      role: true,
+    },
   });
 
   if (!usuario) {
@@ -27,14 +30,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const session = await getServerSession(authOptions);
-  const nextUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true },
-      })
-    : null;
-  const isAdmin = nextUser?.role === "USER_ADMIN";
+  const isAdmin = usuario.role === "USER_ADMIN";
 
   const cost = 1000;
   if (!isAdmin && usuario.xpPoints < cost) {

@@ -21,6 +21,7 @@ model Usuario {
   longestStreak Int      @default(0) @map("longest_streak")
   xpPoints     Int       @default(0) @map("xp_points")
   level        Int       @default(1)
+  role         Role      @default(USER_DEFAULT)
   streakShields Int      @default(0) @map("streak_shields")
   streakFrozenUntil DateTime? @map("streak_frozen_until")
   xpMultiplierExpiresAt DateTime? @map("xp_multiplier_expires_at")
