@@ -530,106 +530,108 @@ export default function LojaPage() {
               </button>
             </article>
           </section>
-        </main>
 
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-          {themeDefinitions.map((theme) => {
-            const unlocked = state.unlockedThemes.includes(theme.key);
-            const active =
-              state.currentTheme === theme.key ||
-              (!state.currentTheme && theme.key === "default");
+          <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+            {themeDefinitions.map((theme) => {
+              const unlocked = state.unlockedThemes.includes(theme.key);
+              const active =
+                state.currentTheme === theme.key ||
+                (!state.currentTheme && theme.key === "default");
 
-            return (
-              <article
-                key={theme.key}
-                className={`rounded-3xl border p-5 shadow-sm ${active ? "border-(--primary)/40 bg-(--primary)/10" : "border-(--subbackground) bg-(--bgcard)"}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`rounded-2xl p-3 ${active ? "bg-(--primary)/20 text-(--primary)" : "bg-(--subbackground) text-(--subText)"}`}
-                  >
-                    {theme.icon}
+              return (
+                <article
+                  key={theme.key}
+                  className={`rounded-3xl border p-5 shadow-sm ${active ? "border-(--primary)/40 bg-(--primary)/10" : "border-(--subbackground) bg-(--bgcard)"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`rounded-2xl p-3 ${active ? "bg-(--primary)/20 text-(--primary)" : "bg-(--subbackground) text-(--subText)"}`}
+                    >
+                      {theme.icon}
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${active ? "bg-(--primary)/20 text-(--primary)" : unlocked ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}
+                    >
+                      {active ? "Ativo" : unlocked ? "Comprado" : "Disponível"}
+                    </span>
                   </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${active ? "bg-(--primary)/20 text-(--primary)" : unlocked ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}
-                  >
-                    {active ? "Ativo" : unlocked ? "Comprado" : "Disponível"}
-                  </span>
-                </div>
-                <h2 className="mt-4 text-xl font-bold text-(--text)">
-                  {theme.name}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-(--subText)">
-                  {theme.description}
-                </p>
-                <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
-                  <p>
-                    Preço: {theme.cost} XP • {theme.type}
+                  <h2 className="mt-4 text-xl font-bold text-(--text)">
+                    {theme.name}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-(--subText)">
+                    {theme.description}
                   </p>
-                </div>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewTheme(theme.key)}
-                    className="inline-flex items-center gap-2 rounded-full border border-(--subbackground) px-3 py-2 text-sm font-semibold text-(--text) transition hover:bg-(--subbackground)"
-                  >
-                    <Eye className="h-4 w-4" /> Visualizar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleBuyTheme(theme.key as ThemeKey)}
-                    disabled={
-                      buyingTheme || loading || state.xpPoints < theme.cost
-                    }
-                    className={`inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
-                  >
-                    {buyingTheme
-                      ? "Processando..."
-                      : unlocked
-                        ? active
-                          ? "Equipado"
-                          : "Equipar"
-                        : `Comprar (${theme.cost} XP)`}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+                  <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
+                    <p>
+                      Preço: {theme.cost} XP • {theme.type}
+                    </p>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTheme(theme.key)}
+                      className="inline-flex items-center gap-2 rounded-full border border-(--subbackground) px-3 py-2 text-sm font-semibold text-(--text) transition hover:bg-(--subbackground)"
+                    >
+                      <Eye className="h-4 w-4" /> Visualizar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleBuyTheme(theme.key as ThemeKey)}
+                      disabled={
+                        buyingTheme || loading || state.xpPoints < theme.cost
+                      }
+                      className={`inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
+                    >
+                      {buyingTheme
+                        ? "Processando..."
+                        : unlocked
+                          ? active
+                            ? "Equipado"
+                            : "Equipar"
+                          : `Comprar (${theme.cost} XP)`}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
 
-        <section className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--subText)">
-                Upgrade
-              </p>
-              <h2 className="mt-2 text-xl font-bold text-(--text)">
-                Análise Avançada da IA
-              </h2>
+          <section className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--subText)">
+                  Upgrade
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-(--text)">
+                  Análise Avançada da IA
+                </h2>
+              </div>
+              <div className="rounded-2xl bg-(--subbackground) p-3 text-(--primary)">
+                <BrainCircuit className="h-6 w-6" />
+              </div>
             </div>
-            <div className="rounded-2xl bg-(--subbackground) p-3 text-(--primary)">
-              <BrainCircuit className="h-6 w-6" />
+            <p className="mt-3 text-sm leading-6 text-(--subText)">
+              Compre um uso extra para a IA mapear melhor seu backlog e gerar
+              recomendações mais profundas na tela “Consultar IA”.
+            </p>
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-(--subbackground) px-4 py-3 text-sm text-(--subText)">
+              <span>
+                Preço: 150 XP • Consultas extras: {state.purchasedAiQueries}
+              </span>
+              <span>
+                {state.purchasedAiQueries > 0 ? "Ativo" : "Disponível"}
+              </span>
             </div>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-(--subText)">
-            Compre um uso extra para a IA mapear melhor seu backlog e gerar
-            recomendações mais profundas na tela “Consultar IA”.
-          </p>
-          <div className="mt-4 flex items-center justify-between rounded-2xl bg-(--subbackground) px-4 py-3 text-sm text-(--subText)">
-            <span>
-              Preço: 150 XP • Consultas extras: {state.purchasedAiQueries}
-            </span>
-            <span>{state.purchasedAiQueries > 0 ? "Ativo" : "Disponível"}</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleBuyAdvancedAi}
-            disabled={buyingAdvancedAi || loading || state.xpPoints < 150}
-            className="mt-5 whitespace-nowrap rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {buyingAdvancedAi ? "Processando..." : "Comprar (150 XP)"}
-          </button>
-        </section>
+            <button
+              type="button"
+              onClick={handleBuyAdvancedAi}
+              disabled={buyingAdvancedAi || loading || state.xpPoints < 150}
+              className="mt-5 whitespace-nowrap rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {buyingAdvancedAi ? "Processando..." : "Comprar (150 XP)"}
+            </button>
+          </section>
+        </main>
       </div>
     </>
   );
