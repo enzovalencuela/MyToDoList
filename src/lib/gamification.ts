@@ -66,6 +66,7 @@ export async function applyTaskCompletionReward(userId: number) {
       longestStreak: true,
       xpPoints: true,
       lastActiveDay: true,
+      xpMultiplierExpiresAt: true,
     },
   });
 
@@ -93,7 +94,15 @@ export async function applyTaskCompletionReward(userId: number) {
     nextStreakCount = 1;
   }
 
-  const nextXpPoints = usuario.xpPoints + XP_PER_TASK_COMPLETION;
+  const now = new Date();
+  const hasActiveXpMultiplier =
+    usuario.xpMultiplierExpiresAt instanceof Date &&
+    usuario.xpMultiplierExpiresAt > now;
+  const rewardXp = hasActiveXpMultiplier
+    ? XP_PER_TASK_COMPLETION * 2
+    : XP_PER_TASK_COMPLETION;
+
+  const nextXpPoints = usuario.xpPoints + rewardXp;
   const nextLevel = Math.floor(nextXpPoints / XP_PER_LEVEL) + 1;
   const nextLongestStreak = Math.max(usuario.longestStreak, nextStreakCount);
 
@@ -124,13 +133,13 @@ export async function applyTaskCompletionReward(userId: number) {
       },
       update: {
         xpEarned: {
-          increment: XP_PER_TASK_COMPLETION,
+          increment: rewardXp,
         },
       },
       create: {
         userId,
         activityDate: todayDate,
-        xpEarned: XP_PER_TASK_COMPLETION,
+        xpEarned: rewardXp,
       },
     });
   }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -31,6 +31,21 @@
   --foreground: #e9f4ff;
 }
 
+[data-theme="emerald"] {
+  --primary: #10b981;
+  --secondary: #34d399;
+  --background: #04110c;
+  --background-2: #092019;
+  --subbackground: #113527;
+  --bgcard: #0d221b;
+  --text: #ecfdf5;
+  --subText: #9ae6bf;
+  --button: #0f5d3f;
+  --buttonRed: #f87171;
+  --taskcompleted: #1f4a3b;
+  --foreground: #ecfdf5;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -39,8 +54,10 @@
 body {
   background: var(--background);
   color: var(--text);
-  font-family: 'Dosis', Arial, Helvetica, sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
+  font-family: "Dosis", Arial, Helvetica, sans-serif;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 #__next,
