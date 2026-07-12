@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Ajuda",
   description:
-    "Perguntas frequentes sobre o Nexgen Tasks. Aprenda a criar, editar, reordenar e filtrar tarefas no gerenciador.",
+    "FAQ do Nexgen Tasks: Agenda fixa, Backlog com Drag and Drop, Streaks, XP e gerenciamento de tarefas.",
   openGraph: {
     title: "Ajuda | Nexgen Tasks",
-    description: "FAQ e dicas de como usar o Nexgen Tasks.",
+    description: "Perguntas frequentes sobre Agenda, Backlog, gamificação e tarefas do dia.",
   },
 };
 

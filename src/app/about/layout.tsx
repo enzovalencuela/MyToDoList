@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sobre",
   description:
-    "Conheça o Nexgen Tasks, gerenciador de tarefas construído com Next.js, Prisma, PostgreSQL e Tailwind CSS. Moderno, rápido e gratuito.",
+    "Conheça o Nexgen Tasks: ecossistema de produtividade com Tarefas, Agenda, Backlog e gamificação por Streaks e XP.",
   openGraph: {
     title: "Sobre | Nexgen Tasks",
-    description: "Conheça o Nexgen Tasks e as tecnologias por trás da plataforma.",
+    description:
+      "Ecossistema inteligente de produtividade pessoal com foco diário, rotina consistente e evolução gamificada.",
   },
 };
 
