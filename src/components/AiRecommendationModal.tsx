@@ -101,7 +101,7 @@ export default function AiRecommendationModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 gap-6">
           {!loading && !recommendation && (
             <div className="rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] px-5 py-8 text-center">
               <BrainCircuit className="mx-auto h-12 w-12 text-[var(--primary)]" />
@@ -112,11 +112,11 @@ export default function AiRecommendationModal({
                 A IA vai olhar suas tarefas de hoje, sua agenda fixa e seu
                 backlog ativo.
               </p>
-              <div className="mt-4 inline-flex rounded-full border border-[var(--subbackground)] bg-[var(--background)] px-3 py-1.5 text-sm font-semibold text-[var(--text)]">
-                {purchasedAiQueries > 0
-                  ? `${purchasedAiQueries} consulta${purchasedAiQueries > 1 ? "s" : ""} extra${purchasedAiQueries > 1 ? "s" : ""} disponível${purchasedAiQueries > 1 ? "is" : ""}`
-                  : "1 consulta gratuita disponível hoje"}
-              </div>
+              {purchasedAiQueries > 0 && (
+                <div className="mt-4 inline-flex rounded-full border border-[var(--subbackground)] bg-[var(--background)] px-3 py-1.5 text-sm font-semibold text-[var(--text)]">
+                  {`${purchasedAiQueries} consulta${purchasedAiQueries > 1 ? "s" : ""} extra${purchasedAiQueries > 1 ? "s" : ""} disponível${purchasedAiQueries > 1 ? "is" : ""}`}
+                </div>
+              )}
               <button
                 onClick={fetchRecommendation}
                 disabled={!canUseAi}
