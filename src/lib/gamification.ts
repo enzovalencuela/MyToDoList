@@ -51,7 +51,10 @@ export function buildGamificationStats(input: {
     level: input.level,
     xpInCurrentLevel,
     xpForNextLevel: XP_PER_LEVEL,
-    progressPercent: Math.min(100, Math.round((xpInCurrentLevel / XP_PER_LEVEL) * 100)),
+    progressPercent: Math.min(
+      100,
+      Math.round((xpInCurrentLevel / XP_PER_LEVEL) * 100),
+    ),
   };
 }
 
@@ -69,10 +72,16 @@ export async function applyTaskCompletionReward(userId: number) {
   if (!usuario) return null;
 
   const todayKey = getDateKey(new Date());
-  const lastActiveDayKey = usuario.lastActiveDay ? getDateKey(usuario.lastActiveDay) : null;
+  const todayDate = dateKeyToDate(todayKey);
+  const lastActiveDayKey = usuario.lastActiveDay
+    ? getDateKey(usuario.lastActiveDay)
+    : null;
   const daysSinceLastActivity = lastActiveDayKey
     ? differenceInCalendarDays(lastActiveDayKey, todayKey)
     : null;
+
+  const isFirstTaskOfDay =
+    daysSinceLastActivity === null || daysSinceLastActivity !== 0;
 
   let nextStreakCount = usuario.streakCount;
 
@@ -95,7 +104,7 @@ export async function applyTaskCompletionReward(userId: number) {
       longestStreak: nextLongestStreak,
       xpPoints: nextXpPoints,
       level: nextLevel,
-      lastActiveDay: dateKeyToDate(todayKey),
+      lastActiveDay: todayDate,
     },
     select: {
       streakCount: true,
@@ -104,6 +113,27 @@ export async function applyTaskCompletionReward(userId: number) {
       level: true,
     },
   });
+
+  if (isFirstTaskOfDay) {
+    await prisma.streakHistory.upsert({
+      where: {
+        userId_activityDate: {
+          userId,
+          activityDate: todayDate,
+        },
+      },
+      update: {
+        xpEarned: {
+          increment: XP_PER_TASK_COMPLETION,
+        },
+      },
+      create: {
+        userId,
+        activityDate: todayDate,
+        xpEarned: XP_PER_TASK_COMPLETION,
+      },
+    });
+  }
 
   return buildGamificationStats(updatedUsuario);
 }

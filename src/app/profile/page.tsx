@@ -3,7 +3,15 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Lock, Trash2, User, Mail, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Lock,
+  Trash2,
+  User,
+  Mail,
+  ShieldCheck,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -85,7 +93,10 @@ export default function ProfilePage() {
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
-      <Link href="/dashboard" className="inline-flex items-center gap-2 mb-6 gradient-text font-bold hover:underline">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-2 mb-6 gradient-text font-bold hover:underline"
+      >
         <ArrowLeft className="w-5 h-5" /> Voltar
       </Link>
 
@@ -96,7 +107,11 @@ export default function ProfilePage() {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white overflow-hidden">
             {session?.user?.image ? (
-              <img src={session.user.image} alt="avatar" className="w-full h-full object-cover" />
+              <img
+                src={session.user.image}
+                alt="avatar"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <User className="w-8 h-8" />
             )}
@@ -116,6 +131,13 @@ export default function ProfilePage() {
           </div>
         </div>
         <GamificationProgress />
+        <Link
+          href="/conquistas"
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--primary)]/10"
+        >
+          <Trophy className="h-4 w-4" />
+          Ver histórico e calendário
+        </Link>
       </div>
 
       {/* Change password (only for credentials users) */}
@@ -172,7 +194,8 @@ export default function ProfilePage() {
           <Trash2 className="w-5 h-5" /> Zona de Perigo
         </h3>
         <p className="text-sm text-[var(--subText)] mb-4">
-          Ao deletar sua conta, todos os seus dados e tarefas serão permanentemente removidos. Esta ação não pode ser desfeita.
+          Ao deletar sua conta, todos os seus dados e tarefas serão
+          permanentemente removidos. Esta ação não pode ser desfeita.
         </p>
         <button
           onClick={() => setShowDeleteConfirm(true)}

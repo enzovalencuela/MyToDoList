@@ -26,6 +26,7 @@ model Usuario {
   tarefas      Tarefa[]
   weeklyTasks  WeeklyTask[]
   backlogGoals BacklogGoal[]
+  streakHistory StreakHistory[]
   notificationSettings NotificationSettings?
   notificationDeliveries NotificationDelivery[]
 
@@ -118,6 +119,19 @@ model NotificationDelivery {
   @@unique([userId, type, referenceKey])
   @@index([type, deliveredAt])
   @@map("notification_delivery")
+}
+
+model StreakHistory {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       Int      @map("id_usuario")
+  user         Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
+  activityDate DateTime @db.Date @map("activity_date")
+  xpEarned     Int      @default(0) @map("xp_earned")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, activityDate])
+  @@index([userId, activityDate])
+  @@map("streak_history")
 }
 
 // ========== TABELAS NOVAS (NextAuth) ==========

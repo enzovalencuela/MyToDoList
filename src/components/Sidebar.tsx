@@ -14,6 +14,7 @@ import {
   ListTodo,
   CalendarDays,
   BookOpenCheck,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import ThemeSwitch from "./ThemeSwitch";
@@ -39,6 +40,7 @@ const primaryNavItems: NavItem[] = [
 
 const secondaryNavItems: NavItem[] = [
   { label: "Perfil", href: "/profile", icon: User },
+  { label: "Conquistas", href: "/conquistas", icon: Trophy },
   { label: "Configurações", href: "/settings", icon: Settings },
   { label: "Sobre", href: "/about", icon: Info },
   { label: "Ajuda", href: "/help", icon: HelpCircle },
@@ -64,7 +66,8 @@ function SidebarSection({
       </p>
       <div className="space-y-2">
         {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
             <Link
@@ -79,7 +82,9 @@ function SidebarSection({
             >
               <item.icon
                 className={`h-5 w-5 ${
-                  active ? "text-[var(--primary)]" : "text-[var(--subText)] group-hover:text-[var(--text)]"
+                  active
+                    ? "text-[var(--primary)]"
+                    : "text-[var(--subText)] group-hover:text-[var(--text)]"
                 }`}
               />
               <span>{item.label}</span>
@@ -100,7 +105,9 @@ function SidebarContent({
   mobile: boolean;
   onClose: () => void;
   pathname: string;
-  user: { name?: string | null; email?: string | null; image?: string | null } | undefined;
+  user:
+    | { name?: string | null; email?: string | null; image?: string | null }
+    | undefined;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -109,7 +116,9 @@ function SidebarContent({
           <NexgenLogo className="h-9 w-9" />
           <div>
             <p className="text-sm font-bold text-[var(--text)]">Nexgen Tasks</p>
-            <p className="text-xs text-[var(--subText)]">Organize melhor seu dia</p>
+            <p className="text-xs text-[var(--subText)]">
+              Organize melhor seu dia
+            </p>
           </div>
         </div>
         {mobile && (
@@ -126,14 +135,22 @@ function SidebarContent({
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[var(--subbackground)] text-[var(--text)]">
             {user?.image ? (
-              <img src={user.image} alt="avatar" className="h-full w-full object-cover" />
+              <img
+                src={user.image}
+                alt="avatar"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <User className="h-7 w-7" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-[var(--text)]">{user?.name || "Usuário"}</p>
-            <p className="truncate text-xs text-[var(--subText)]">{user?.email}</p>
+            <p className="truncate text-sm font-bold text-[var(--text)]">
+              {user?.name || "Usuário"}
+            </p>
+            <p className="truncate text-xs text-[var(--subText)]">
+              {user?.email}
+            </p>
           </div>
         </div>
         <GamificationProgress />
@@ -179,7 +196,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:block lg:w-[290px] lg:border-r lg:border-[var(--subbackground)] lg:bg-[var(--bgcard)] lg:shadow-xl">
-        <SidebarContent mobile={false} onClose={onClose} pathname={pathname} user={session?.user} />
+        <SidebarContent
+          mobile={false}
+          onClose={onClose}
+          pathname={pathname}
+          user={session?.user}
+        />
       </aside>
 
       <AnimatePresence>
@@ -199,7 +221,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               transition={{ type: "spring", stiffness: 260, damping: 22 }}
               className="fixed right-0 top-0 z-50 h-full w-[290px] bg-[var(--bgcard)] shadow-2xl lg:hidden"
             >
-              <SidebarContent mobile onClose={onClose} pathname={pathname} user={session?.user} />
+              <SidebarContent
+                mobile
+                onClose={onClose}
+                pathname={pathname}
+                user={session?.user}
+              />
             </motion.aside>
           </>
         )}
