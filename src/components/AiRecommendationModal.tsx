@@ -9,6 +9,9 @@ const RECOMMENDATION_CACHE_KEY = "@nexgen-tasks:last-recommendation";
 
 interface AiRecommendationModalProps {
   onClose: () => void;
+  canUseAi: boolean;
+  purchasedAiQueries: number;
+  onQuotaUpdated: () => Promise<void> | void;
 }
 
 interface CachedRecommendation {
@@ -24,15 +27,16 @@ function getLocalDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function isRecommendationResponse(value: unknown): value is RecommendationResponse {
+function isRecommendationResponse(
+  value: unknown,
+): value is RecommendationResponse {
   if (!value || typeof value !== "object") {
     return false;
   }
 
   const payload = value as Record<string, unknown>;
   return (
-    typeof payload.saudacao === "string" &&
-    Array.isArray(payload.recomendacoes)
+    typeof payload.saudacao === "string" && Array.isArray(payload.recomendacoes)
   );
 }
 
@@ -96,6 +100,9 @@ function getValidCachedRecommendation() {
 
 export default function AiRecommendationModal({
   onClose,
+  canUseAi,
+  purchasedAiQueries,
+  onQuotaUpdated,
 }: AiRecommendationModalProps) {
   const [cachedRecommendation] = useState(getValidCachedRecommendation);
   const [loading, setLoading] = useState(false);
@@ -106,6 +113,13 @@ export default function AiRecommendationModal({
   );
 
   async function fetchRecommendation() {
+    if (!canUseAi) {
+      toast.error(
+        "Você já usou a consulta gratuita de hoje e não possui consultas extras.",
+      );
+      return;
+    }
+
     setLoading(true);
     setRecommendation(null);
     setGeneratedAt(null);
@@ -119,6 +133,7 @@ export default function AiRecommendationModal({
 
     if (!response.ok) {
       toast.error(result.error ?? "Nao foi possivel consultar a IA.");
+      await onQuotaUpdated();
       return;
     }
 
@@ -135,6 +150,7 @@ export default function AiRecommendationModal({
     );
     setRecommendation(result);
     setGeneratedAt(cachePayload.generatedAt);
+    await onQuotaUpdated();
   }
 
   return (
@@ -173,11 +189,18 @@ export default function AiRecommendationModal({
                 Recomendar proximo foco
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--subText)]">
-                A IA vai olhar suas tarefas de hoje, sua agenda fixa e seu backlog ativo.
+                A IA vai olhar suas tarefas de hoje, sua agenda fixa e seu
+                backlog ativo.
               </p>
+              <div className="mt-4 inline-flex rounded-full border border-[var(--subbackground)] bg-[var(--background)] px-3 py-1.5 text-sm font-semibold text-[var(--text)]">
+                {purchasedAiQueries > 0
+                  ? `${purchasedAiQueries} consulta${purchasedAiQueries > 1 ? "s" : ""} extra${purchasedAiQueries > 1 ? "s" : ""} disponível${purchasedAiQueries > 1 ? "is" : ""}`
+                  : "1 consulta gratuita disponível hoje"}
+              </div>
               <button
                 onClick={fetchRecommendation}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                disabled={!canUseAi}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <Sparkles className="h-4 w-4" /> Gerar recomendacao
               </button>

@@ -41,7 +41,7 @@ const workspaceNavItems: NavItem[] = [
 
 const gamificationNavItems: NavItem[] = [
   { label: "Conquistas", href: "/conquistas", icon: Trophy },
-  { label: "Loja de XP", href: "/loja", icon: ShoppingBag },
+  { label: "Loja", href: "/loja", icon: ShoppingBag },
 ];
 
 const accountNavItems: NavItem[] = [

@@ -136,11 +136,53 @@ export async function GET() {
       }),
       prisma.usuario.findUnique({
         where: { id_usuario: userId },
-        select: { advancedAiUses: true },
+        select: {
+          advancedAiUses: true,
+          freeAiQueriesUsedToday: true,
+          purchasedAiQueries: true,
+          lastAiQueryAt: true,
+        },
       }),
     ]);
 
-  const advancedAnalysisEnabled = (userProfile?.advancedAiUses ?? 0) > 0;
+  const shouldResetDailyCounter =
+    !userProfile?.lastAiQueryAt ||
+    getLocalDateKey(new Date(userProfile.lastAiQueryAt)) !== todayKey;
+  const freeAiQueriesUsedToday = shouldResetDailyCounter
+    ? 0
+    : (userProfile?.freeAiQueriesUsedToday ?? 0);
+  const purchasedAiQueries = userProfile?.purchasedAiQueries ?? 0;
+
+  if (freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Limite diário de consultas gratuitas atingido. Compre consultas extras na loja para continuar.",
+      },
+      { status: 429 },
+    );
+  }
+
+  const nextFreeAiQueriesUsedToday =
+    freeAiQueriesUsedToday >= 1
+      ? freeAiQueriesUsedToday
+      : freeAiQueriesUsedToday + 1;
+  const nextPurchasedAiQueries =
+    freeAiQueriesUsedToday >= 1 && purchasedAiQueries > 0
+      ? purchasedAiQueries - 1
+      : purchasedAiQueries;
+
+  await prisma.usuario.update({
+    where: { id_usuario: userId },
+    data: {
+      freeAiQueriesUsedToday: nextFreeAiQueriesUsedToday,
+      purchasedAiQueries: nextPurchasedAiQueries,
+      lastAiQueryAt: today,
+    },
+  });
+
+  const advancedAnalysisEnabled =
+    (userProfile?.advancedAiUses ?? 0) > 0 || purchasedAiQueries > 0;
 
   const prompt = `
 Voce e um Mentor de Produtividade do Nexgen Tasks.

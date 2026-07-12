@@ -6,10 +6,28 @@ import { useEffect, useState, useCallback } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
 } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { Menu, Plus, Filter, ArrowUpDown, Trash2, User, CalendarX2, Sparkles } from "lucide-react";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import {
+  Menu,
+  Plus,
+  Filter,
+  ArrowUpDown,
+  Trash2,
+  User,
+  CalendarX2,
+  Sparkles,
+} from "lucide-react";
 
 import TaskCard, { type Todo } from "@/components/TaskCard";
 import AddTaskForm from "@/components/AddTaskForm";
@@ -39,8 +57,15 @@ export default function DashboardPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [aiQuota, setAiQuota] = useState({
+    canUseAi: true,
+    purchasedAiQueries: 0,
+    freeAiQueriesUsedToday: 0,
+  });
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   const fetchTodos = useCallback(async () => {
     const res = await fetch("/api/todos");
@@ -51,12 +76,37 @@ export default function DashboardPage() {
     setLoading(false);
   }, []);
 
+  const loadAiQuota = useCallback(async () => {
+    try {
+      const res = await fetch("/api/gamification");
+      if (!res.ok) {
+        return;
+      }
+
+      const data = await res.json();
+      const purchasedAiQueries = Number(data.purchasedAiQueries ?? 0);
+      const freeAiQueriesUsedToday = Number(data.freeAiQueriesUsedToday ?? 0);
+
+      setAiQuota({
+        canUseAi: freeAiQueriesUsedToday < 1 || purchasedAiQueries > 0,
+        purchasedAiQueries,
+        freeAiQueriesUsedToday,
+      });
+    } catch {
+      setAiQuota((prev) => prev);
+    }
+  }, []);
+
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    // Match the existing authenticated page loading pattern used in this app.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (status === "authenticated") fetchTodos();
-  }, [status, router, fetchTodos]);
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      void Promise.all([fetchTodos(), loadAiQuota()]);
+    }
+  }, [status, router, fetchTodos, loadAiQuota]);
 
   // Apply filters and sorting
   useEffect(() => {
@@ -68,7 +118,7 @@ export default function DashboardPage() {
       result = result.filter(
         (t) =>
           t.title.toLowerCase().includes(term) ||
-          (t.description && t.description.toLowerCase().includes(term))
+          (t.description && t.description.toLowerCase().includes(term)),
       );
     }
 
@@ -87,7 +137,9 @@ export default function DashboardPage() {
         let cmp = 0;
         if (filterType === "priority") {
           const order = { Urgente: 0, Alta: 1, Normal: 2, Baixa: 3 };
-          cmp = (order[a.priority as keyof typeof order] ?? 2) - (order[b.priority as keyof typeof order] ?? 2);
+          cmp =
+            (order[a.priority as keyof typeof order] ?? 2) -
+            (order[b.priority as keyof typeof order] ?? 2);
         } else if (filterType === "date") {
           const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
           const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
@@ -104,7 +156,12 @@ export default function DashboardPage() {
     setFilteredTodos([...pending, ...completed]);
   }, [allTodos, searchTerm, filterType, sortDir, selectedDate]);
 
-  async function handleAddTask(task: { title: string; description?: string; priority: string; dueDate?: string }) {
+  async function handleAddTask(task: {
+    title: string;
+    description?: string;
+    priority: string;
+    dueDate?: string;
+  }) {
     const res = await fetch("/api/todos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -138,7 +195,7 @@ export default function DashboardPage() {
     }
 
     setAllTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !completed } : t))
+      prev.map((t) => (t.id === id ? { ...t, completed: !completed } : t)),
     );
   }
 
@@ -207,7 +264,9 @@ export default function DashboardPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-3 text-[var(--subText)] font-semibold">Carregando...</p>
+          <p className="mt-3 text-[var(--subText)] font-semibold">
+            Carregando...
+          </p>
         </div>
       </div>
     );
@@ -225,16 +284,25 @@ export default function DashboardPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <NexgenLogo className="w-8 h-8" />
-            <h1 className="truncate text-lg font-bold gradient-text sm:text-xl">Nexgen Tasks</h1>
+            <h1 className="truncate text-lg font-bold gradient-text sm:text-xl">
+              Nexgen Tasks
+            </h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
               {session?.user?.image ? (
-                <img src={session.user.image} alt="" className="w-7 h-7 rounded-full" />
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="w-7 h-7 rounded-full"
+                />
               ) : (
                 <User className="w-5 h-5" />
               )}
-              <span>Olá, {session?.user?.name || session?.user?.email?.split("@")[0]}</span>
+              <span>
+                Olá,{" "}
+                {session?.user?.name || session?.user?.email?.split("@")[0]}
+              </span>
             </div>
             <button
               onClick={() => setShowSidebar(true)}
@@ -253,8 +321,17 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
           <div className="space-y-6">
             <button
-              onClick={() => setShowAiRecommendation(true)}
-              className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[var(--primary)]/20 bg-[var(--bgcard)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/40 hover:shadow-md"
+              onClick={() => {
+                if (!aiQuota.canUseAi) {
+                  toast.error(
+                    "Você já usou a consulta gratuita de hoje e não possui consultas extras.",
+                  );
+                  return;
+                }
+                setShowAiRecommendation(true);
+              }}
+              disabled={!aiQuota.canUseAi}
+              className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[var(--primary)]/20 bg-[var(--bgcard)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
             >
               <span className="flex min-w-0 items-center gap-3">
                 <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)]/15 text-[var(--primary)]">
@@ -270,73 +347,100 @@ export default function DashboardPage() {
                 </span>
               </span>
               <span className="hidden rounded-full bg-[var(--subbackground)] px-4 py-2 text-xs font-bold text-[var(--text)] transition group-hover:bg-[var(--primary)] group-hover:text-white sm:inline-flex">
-                Consultar IA
+                {aiQuota.canUseAi
+                  ? aiQuota.purchasedAiQueries > 0
+                    ? `${aiQuota.purchasedAiQueries} extra${aiQuota.purchasedAiQueries > 1 ? "s" : ""}`
+                    : "1 grátis hoje"
+                  : "Limite diário"}
               </span>
             </button>
 
             {/* Search + Filters bar */}
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <InputSearch onSearch={setSearchTerm} />
+              <InputSearch onSearch={setSearchTerm} />
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Filter dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[var(--subbackground)]
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Filter dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilterMenu(!showFilterMenu)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[var(--subbackground)]
                   text-[var(--text)] text-sm font-semibold hover:ring-2 hover:ring-[var(--primary)] transition"
-              >
-                <Filter className="w-4 h-4" />
-                Filtrar
-              </button>
-              {showFilterMenu && (
-                <div className="absolute top-full mt-1 right-0 bg-[var(--bgcard)] rounded-xl shadow-xl border border-[var(--subbackground)] z-20 w-40 py-1">
-                  {(["priority", "date", "title"] as FilterType[]).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => handleFilter(type)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--subbackground)] transition
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filtrar
+                  </button>
+                  {showFilterMenu && (
+                    <div className="absolute top-full mt-1 right-0 bg-[var(--bgcard)] rounded-xl shadow-xl border border-[var(--subbackground)] z-20 w-40 py-1">
+                      {(["priority", "date", "title"] as FilterType[]).map(
+                        (type) => (
+                          <button
+                            key={type}
+                            onClick={() => handleFilter(type)}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--subbackground)] transition
                         ${filterType === type ? "font-bold text-[var(--primary)]" : "text-[var(--text)]"}`}
-                    >
-                      {type === "priority" ? "Prioridade" : type === "date" ? "Data" : "Título"}
-                    </button>
-                  ))}
+                          >
+                            {type === "priority"
+                              ? "Prioridade"
+                              : type === "date"
+                                ? "Data"
+                                : "Título"}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Active filter badge */}
-            {filterType && (
-              <button
-                onClick={() => { setFilterType(null); }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--primary)] text-white text-xs font-bold"
-              >
-                {filterType === "priority" ? "Prioridade" : filterType === "date" ? "Data" : "Título"}
-                <ArrowUpDown className="w-3 h-3" />
-                ✕
-              </button>
-            )}
-          </div>
+                {/* Active filter badge */}
+                {filterType && (
+                  <button
+                    onClick={() => {
+                      setFilterType(null);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--primary)] text-white text-xs font-bold"
+                  >
+                    {filterType === "priority"
+                      ? "Prioridade"
+                      : filterType === "date"
+                        ? "Data"
+                        : "Título"}
+                    <ArrowUpDown className="w-3 h-3" />✕
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Calendar sidebar */}
           <div className="hidden lg:block">
-            <TaskCalendar todos={allTodos} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+            <TaskCalendar
+              todos={allTodos}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
           </div>
         </div>
 
         {/* Mobile calendar */}
         <div className="lg:hidden mb-6">
-          <TaskCalendar todos={allTodos} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          <TaskCalendar
+            todos={allTodos}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+          />
         </div>
 
         {/* Tasks */}
         {allTodos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-4">📝</div>
-            <h2 className="text-2xl font-bold gradient-text mb-2">Bora organizar sua vida!</h2>
-            <p className="text-[var(--subText)]">Adicione sua primeira tarefa clicando no botão abaixo.</p>
+            <h2 className="text-2xl font-bold gradient-text mb-2">
+              Bora organizar sua vida!
+            </h2>
+            <p className="text-[var(--subText)]">
+              Adicione sua primeira tarefa clicando no botão abaixo.
+            </p>
           </div>
         ) : filteredTodos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -368,8 +472,15 @@ export default function DashboardPage() {
                 <h2 className="mb-3 text-sm font-bold uppercase text-[var(--subText)] tracking-wider">
                   Pendentes ({pendingTodos.length})
                 </h2>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={pendingTodos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={pendingTodos.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                       {pendingTodos.map((todo) => (
                         <TaskCard
@@ -431,10 +542,18 @@ export default function DashboardPage() {
 
       {/* Modals */}
       {showAddForm && (
-        <AddTaskForm onAdd={handleAddTask} onClose={() => setShowAddForm(false)} />
+        <AddTaskForm
+          onAdd={handleAddTask}
+          onClose={() => setShowAddForm(false)}
+        />
       )}
       {showAiRecommendation && (
-        <AiRecommendationModal onClose={() => setShowAiRecommendation(false)} />
+        <AiRecommendationModal
+          onClose={() => setShowAiRecommendation(false)}
+          canUseAi={aiQuota.canUseAi}
+          purchasedAiQueries={aiQuota.purchasedAiQueries}
+          onQuotaUpdated={loadAiQuota}
+        />
       )}
       {showDeleteConfirm && (
         <ConfirmModal

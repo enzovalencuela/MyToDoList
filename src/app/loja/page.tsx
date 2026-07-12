@@ -34,7 +34,7 @@ interface UserShopState {
   xpMultiplierExpiresAt: string | null;
   unlockedThemes: string[];
   currentTheme: string | null;
-  advancedAiUses: number;
+  purchasedAiQueries: number;
 }
 
 async function fetchShopState() {
@@ -54,7 +54,9 @@ async function fetchShopState() {
       ? data.unlockedThemes
       : [],
     currentTheme: data.currentTheme ?? null,
-    advancedAiUses: Number(data.advancedAiUses ?? 0),
+    purchasedAiQueries: Number(
+      data.purchasedAiQueries ?? data.advancedAiUses ?? 0,
+    ),
   } as UserShopState;
 }
 
@@ -107,7 +109,7 @@ export default function LojaPage() {
     xpMultiplierExpiresAt: null,
     unlockedThemes: [],
     currentTheme: null,
-    advancedAiUses: 0,
+    purchasedAiQueries: 0,
   });
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
@@ -271,7 +273,8 @@ export default function LojaPage() {
       setState((prev) => ({
         ...prev,
         xpPoints: result.xpPoints ?? prev.xpPoints,
-        advancedAiUses: result.advancedAiUses ?? prev.advancedAiUses,
+        purchasedAiQueries:
+          result.purchasedAiQueries ?? prev.purchasedAiQueries,
       }));
       toast.success("Análise Avançada da IA liberada");
     } catch (error) {
@@ -564,7 +567,7 @@ export default function LojaPage() {
                       disabled={
                         buyingTheme || loading || state.xpPoints < theme.cost
                       }
-                      className={`inline-flex flex-1 items-center justify-center rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
+                      className={`inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
                     >
                       {buyingTheme
                         ? "Processando..."
@@ -572,7 +575,7 @@ export default function LojaPage() {
                           ? active
                             ? "Equipado"
                             : "Equipar"
-                          : `Comprar por ${theme.cost} XP`}
+                          : `Comprar (${theme.cost} XP)`}
                     </button>
                   </div>
                 </article>
@@ -600,17 +603,19 @@ export default function LojaPage() {
             </p>
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-(--subbackground) px-4 py-3 text-sm text-(--subText)">
               <span>
-                Preço: 150 XP • Uso extra atual: {state.advancedAiUses}
+                Preço: 150 XP • Consultas extras: {state.purchasedAiQueries}
               </span>
-              <span>{state.advancedAiUses > 0 ? "Ativo" : "Disponível"}</span>
+              <span>
+                {state.purchasedAiQueries > 0 ? "Ativo" : "Disponível"}
+              </span>
             </div>
             <button
               type="button"
               onClick={handleBuyAdvancedAi}
               disabled={buyingAdvancedAi || loading || state.xpPoints < 150}
-              className="mt-5 rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-5 whitespace-nowrap rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {buyingAdvancedAi ? "Processando..." : "Comprar por 150 XP"}
+              {buyingAdvancedAi ? "Processando..." : "Comprar (150 XP)"}
             </button>
           </section>
         </div>

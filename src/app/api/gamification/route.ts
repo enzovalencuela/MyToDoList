@@ -23,6 +23,9 @@ export async function GET() {
       unlockedThemes: true,
       currentTheme: true,
       advancedAiUses: true,
+      freeAiQueriesUsedToday: true,
+      purchasedAiQueries: true,
+      lastAiQueryAt: true,
     },
   });
 
@@ -41,5 +44,8 @@ export async function GET() {
     unlockedThemes: usuario.unlockedThemes,
     currentTheme: usuario.currentTheme,
     advancedAiUses: usuario.advancedAiUses,
+    freeAiQueriesUsedToday: usuario.freeAiQueriesUsedToday,
+    purchasedAiQueries: usuario.purchasedAiQueries,
+    lastAiQueryAt: usuario.lastAiQueryAt,
   });
 }

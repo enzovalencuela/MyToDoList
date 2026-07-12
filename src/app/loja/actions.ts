@@ -140,7 +140,11 @@ export async function purchaseAdvancedAi() {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    select: { xpPoints: true, advancedAiUses: true },
+    select: {
+      xpPoints: true,
+      advancedAiUses: true,
+      purchasedAiQueries: true,
+    },
   });
 
   if (!usuario) {
@@ -156,14 +160,20 @@ export async function purchaseAdvancedAi() {
     where: { id_usuario },
     data: {
       xpPoints: usuario.xpPoints - cost,
-      advancedAiUses: usuario.advancedAiUses + 1,
+      advancedAiUses: (usuario.advancedAiUses ?? 0) + 1,
+      purchasedAiQueries: (usuario.purchasedAiQueries ?? 0) + 1,
     },
-    select: { xpPoints: true, advancedAiUses: true },
+    select: {
+      xpPoints: true,
+      advancedAiUses: true,
+      purchasedAiQueries: true,
+    },
   });
 
   return {
     success: true,
     xpPoints: updatedUsuario.xpPoints,
     advancedAiUses: updatedUsuario.advancedAiUses,
+    purchasedAiQueries: updatedUsuario.purchasedAiQueries,
   };
 }

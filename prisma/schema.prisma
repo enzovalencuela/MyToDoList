@@ -27,6 +27,9 @@ model Usuario {
   unlockedThemes String[] @default([]) @map("unlocked_themes")
   currentTheme String? @default("default") @map("current_theme")
   advancedAiUses Int @default(0) @map("advanced_ai_uses")
+  freeAiQueriesUsedToday Int @default(0) @map("free_ai_queries_used_today")
+  purchasedAiQueries Int @default(0) @map("purchased_ai_queries")
+  lastAiQueryAt DateTime? @map("last_ai_query_at")
   lastActiveDay DateTime? @db.Date @map("last_active_day")
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
