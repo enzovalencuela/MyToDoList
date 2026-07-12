@@ -15,7 +15,11 @@ function getDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function getActivityClass(xpEarned: number) {
+function getActivityClass(xpEarned: number, protectedDay = false) {
+  if (protectedDay) {
+    return "bg-slate-600";
+  }
+
   if (!xpEarned) {
     return "bg-[var(--subbackground)]";
   }
@@ -32,6 +36,7 @@ function buildMonthCalendar(
   year: number,
   month: number,
   activityMap: Map<string, number>,
+  activityProtectedMap: Map<string, boolean>,
 ) {
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -43,6 +48,7 @@ function buildMonthCalendar(
     day: number | null;
     isCurrentMonth: boolean;
     xpEarned: number;
+    protectedDay: boolean;
   }> = [];
 
   for (let index = 0; index < totalCells; index += 1) {
@@ -54,6 +60,7 @@ function buildMonthCalendar(
         day: null,
         isCurrentMonth: false,
         xpEarned: 0,
+        protectedDay: false,
       });
       continue;
     }
@@ -61,12 +68,14 @@ function buildMonthCalendar(
     const currentDate = new Date(year, month, dayNumber);
     const dateKey = getDateKey(currentDate);
     const xpEarned = activityMap.get(dateKey) ?? 0;
+    const protectedDay = activityProtectedMap.get(dateKey) ?? false;
 
     cells.push({
       dateKey,
       day: dayNumber,
       isCurrentMonth: true,
       xpEarned,
+      protectedDay,
     });
   }
 
@@ -99,16 +108,20 @@ export default async function ConquistasPage() {
   const historyRecords = await prisma.streakHistory.findMany({
     where: { userId: usuario.id_usuario },
     orderBy: { activityDate: "asc" },
-    select: { activityDate: true, xpEarned: true },
+    select: { activityDate: true, xpEarned: true, protected: true },
   });
 
   const activityMap = new Map<string, number>();
+  const activityProtectedMap = new Map<string, boolean>();
   historyRecords.forEach((record) => {
     const normalizedDate = getDateKey(record.activityDate);
     activityMap.set(
       normalizedDate,
       (activityMap.get(normalizedDate) ?? 0) + record.xpEarned,
     );
+    if (record.protected) {
+      activityProtectedMap.set(normalizedDate, true);
+    }
   });
 
   const currentYear = new Date().getFullYear();
@@ -244,6 +257,7 @@ export default async function ConquistasPage() {
                 currentYear,
                 monthIndex,
                 activityMap,
+                activityProtectedMap,
               );
               const weekRows = [] as Array<
                 Array<{
@@ -251,6 +265,7 @@ export default async function ConquistasPage() {
                   day: number | null;
                   isCurrentMonth: boolean;
                   xpEarned: number;
+                  protectedDay: boolean;
                 }>
               >;
 
@@ -277,7 +292,7 @@ export default async function ConquistasPage() {
                     {weekRows.flat().map((cell, index) => (
                       <div
                         key={`${monthIndex}-${index}`}
-                        className={`h-3 w-3 rounded-[4px] sm:h-4 sm:w-4 ${cell.dateKey ? getActivityClass(cell.xpEarned) : "bg-transparent"}`}
+                        className={`h-3 w-3 rounded-[4px] sm:h-4 sm:w-4 ${cell.dateKey ? getActivityClass(cell.xpEarned, cell.protectedDay) : "bg-transparent"}`}
                         title={
                           cell.dateKey
                             ? `${cell.dateKey} · ${cell.xpEarned} XP`

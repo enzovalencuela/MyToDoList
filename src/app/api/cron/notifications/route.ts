@@ -305,6 +305,71 @@ async function handleInactivityAlerts(now: Date) {
   return sent;
 }
 
+async function handleStreakProtection(now: Date) {
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  yesterday.setHours(0, 0, 0, 0);
+
+  const users = await prisma.usuario.findMany({
+    where: {
+      OR: [{ streakCount: { gt: 0 } }, { streakShields: { gt: 0 } }],
+    },
+    select: {
+      id_usuario: true,
+      streakCount: true,
+      streakShields: true,
+    },
+  });
+
+  let protectedDays = 0;
+  let resetStreaks = 0;
+
+  for (const user of users) {
+    const existingRecord = await prisma.streakHistory.findUnique({
+      where: {
+        userId_activityDate: {
+          userId: user.id_usuario,
+          activityDate: yesterday,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existingRecord) {
+      continue;
+    }
+
+    if (user.streakShields > 0) {
+      await prisma.$transaction([
+        prisma.usuario.update({
+          where: { id_usuario: user.id_usuario },
+          data: { streakShields: { decrement: 1 } },
+        }),
+        prisma.streakHistory.create({
+          data: {
+            userId: user.id_usuario,
+            activityDate: yesterday,
+            xpEarned: 0,
+            protected: true,
+          },
+        }),
+      ]);
+      protectedDays += 1;
+      continue;
+    }
+
+    if (user.streakCount > 0) {
+      await prisma.usuario.update({
+        where: { id_usuario: user.id_usuario },
+        data: { streakCount: 0 },
+      });
+      resetStreaks += 1;
+    }
+  }
+
+  return { protectedDays, resetStreaks };
+}
+
 async function runNotificationCron(req: Request) {
   if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -326,11 +391,13 @@ async function runNotificationCron(req: Request) {
   );
 
   const now = new Date();
-  const [agendaSent, deadlineSent, inactivitySent] = await Promise.all([
-    handleAgendaReminders(now),
-    handleTaskDeadlines(now),
-    handleInactivityAlerts(now),
-  ]);
+  const [agendaSent, deadlineSent, inactivitySent, streakProtection] =
+    await Promise.all([
+      handleAgendaReminders(now),
+      handleTaskDeadlines(now),
+      handleInactivityAlerts(now),
+      handleStreakProtection(now),
+    ]);
 
   return NextResponse.json({
     success: true,
@@ -340,6 +407,7 @@ async function runNotificationCron(req: Request) {
       taskDeadlines: deadlineSent,
       aiInactivityAlerts: inactivitySent,
     },
+    streakProtection,
   });
 }
 

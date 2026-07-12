@@ -21,6 +21,7 @@ model Usuario {
   longestStreak Int      @default(0) @map("longest_streak")
   xpPoints     Int       @default(0) @map("xp_points")
   level        Int       @default(1)
+  streakShields Int      @default(0) @map("streak_shields")
   lastActiveDay DateTime? @db.Date @map("last_active_day")
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
@@ -127,6 +128,7 @@ model StreakHistory {
   user         Usuario  @relation(fields: [userId], references: [id_usuario], onDelete: Cascade)
   activityDate DateTime @db.Date @map("activity_date")
   xpEarned     Int      @default(0) @map("xp_earned")
+  protected    Boolean  @default(false)
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@unique([userId, activityDate])

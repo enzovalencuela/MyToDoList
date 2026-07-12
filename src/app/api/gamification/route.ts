@@ -17,12 +17,19 @@ export async function GET() {
       longestStreak: true,
       xpPoints: true,
       level: true,
+      streakShields: true,
     },
   });
 
   if (!usuario) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Usuário não encontrado" },
+      { status: 404 },
+    );
   }
 
-  return NextResponse.json(buildGamificationStats(usuario));
+  return NextResponse.json({
+    ...buildGamificationStats(usuario),
+    streakShields: usuario.streakShields,
+  });
 }
