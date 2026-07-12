@@ -138,133 +138,131 @@ export default function ProfilePage() {
       <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
       <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
-        <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
-          <h1 className="text-3xl font-bold gradient-text mb-8">Meu Perfil</h1>
+        <h1 className="text-3xl font-bold gradient-text mb-8">Meu Perfil</h1>
 
-          {/* User info card */}
-          <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white overflow-hidden">
-                {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt="avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8" />
-                )}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-[var(--text)]">
-                  {session?.user?.name || "Usuário"}
-                </h2>
-                <p className="flex items-center gap-1.5 text-sm text-[var(--subText)]">
-                  <Mail className="w-4 h-4" />
-                  {session?.user?.email}
-                </p>
-                <p className="flex items-center gap-1.5 text-xs text-[var(--subText)] mt-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {session?.user?.image ? "Conta Google" : "Email e Senha"}
-                </p>
-              </div>
+        {/* User info card */}
+        <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white overflow-hidden">
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-8 h-8" />
+              )}
             </div>
-            <GamificationProgress />
-            <Link
-              href="/conquistas"
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--primary)]/10"
-            >
-              <Trophy className="h-4 w-4" />
-              Ver histórico e calendário
-            </Link>
+            <div>
+              <h2 className="text-xl font-bold text-[var(--text)]">
+                {session?.user?.name || "Usuário"}
+              </h2>
+              <p className="flex items-center gap-1.5 text-sm text-[var(--subText)]">
+                <Mail className="w-4 h-4" />
+                {session?.user?.email}
+              </p>
+              <p className="flex items-center gap-1.5 text-xs text-[var(--subText)] mt-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {session?.user?.image ? "Conta Google" : "Email e Senha"}
+              </p>
+            </div>
           </div>
+          <GamificationProgress />
+          <Link
+            href="/conquistas"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-3 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--primary)]/10"
+          >
+            <Trophy className="h-4 w-4" />
+            Ver histórico e calendário
+          </Link>
+        </div>
 
-          {/* Change password (only for credentials users) */}
-          {isCredentialsUser && (
-            <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md mb-6">
-              <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-4">
-                <Lock className="w-5 h-5" /> Alterar Senha
-              </h3>
+        {/* Change password (only for credentials users) */}
+        {isCredentialsUser && (
+          <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md mb-6">
+            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-4">
+              <Lock className="w-5 h-5" /> Alterar Senha
+            </h3>
 
-              <form onSubmit={handleChangePassword} className="space-y-3">
-                <input
-                  type="password"
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Senha atual"
-                  className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <input
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Senha atual"
+                className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
                 placeholder:text-[var(--subText)] outline-none focus:ring-2 focus:ring-[var(--primary)] transition"
-                />
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Nova senha (mín. 6 caracteres)"
-                  className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
+              />
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Nova senha (mín. 6 caracteres)"
+                className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
                 placeholder:text-[var(--subText)] outline-none focus:ring-2 focus:ring-[var(--primary)] transition"
-                />
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirmar nova senha"
-                  className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
+              />
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmar nova senha"
+                className="w-full px-4 py-2.5 rounded-full bg-[var(--subbackground)] text-[var(--text)]
                 placeholder:text-[var(--subText)] outline-none focus:ring-2 focus:ring-[var(--primary)] transition"
-                />
-                <button
-                  type="submit"
-                  disabled={changingPassword}
-                  className="w-full py-2.5 rounded-full font-bold text-white
+              />
+              <button
+                type="submit"
+                disabled={changingPassword}
+                className="w-full py-2.5 rounded-full font-bold text-white
                 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]
                 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 transition-all"
-                >
-                  {changingPassword ? "Alterando..." : "Alterar Senha"}
-                </button>
-              </form>
-            </div>
-          )}
+              >
+                {changingPassword ? "Alterando..." : "Alterar Senha"}
+              </button>
+            </form>
+          </div>
+        )}
 
-          {/* Delete account */}
-          <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md border border-red-500/20">
-            <h3 className="text-lg font-bold text-red-500 flex items-center gap-2 mb-2">
-              <Trash2 className="w-5 h-5" /> Zona de Perigo
-            </h3>
-            <p className="text-sm text-[var(--subText)] mb-4">
-              Ao deletar sua conta, todos os seus dados e tarefas serão
-              permanentemente removidos. Esta ação não pode ser desfeita.
-            </p>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={deleting}
-              className="px-6 py-2.5 rounded-full font-bold text-white
+        {/* Delete account */}
+        <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md border border-red-500/20">
+          <h3 className="text-lg font-bold text-red-500 flex items-center gap-2 mb-2">
+            <Trash2 className="w-5 h-5" /> Zona de Perigo
+          </h3>
+          <p className="text-sm text-[var(--subText)] mb-4">
+            Ao deletar sua conta, todos os seus dados e tarefas serão
+            permanentemente removidos. Esta ação não pode ser desfeita.
+          </p>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+            className="px-6 py-2.5 rounded-full font-bold text-white
             bg-gradient-to-r from-red-500 to-red-700
             hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 transition-all"
-            >
-              {deleting ? "Deletando..." : "Deletar Minha Conta"}
-            </button>
-          </div>
+          >
+            {deleting ? "Deletando..." : "Deletar Minha Conta"}
+          </button>
+        </div>
 
-          <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md border border-red-500/20">
-            <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sair</span>
-            </button>
-          </div>
+        <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md border border-red-500/20">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sair</span>
+          </button>
+        </div>
 
-          {showDeleteConfirm && (
-            <ConfirmModal
-              message="Tem certeza que deseja deletar sua conta? Todos os dados serão perdidos permanentemente."
-              onConfirm={handleDeleteAccount}
-              onCancel={() => setShowDeleteConfirm(false)}
-            />
-          )}
-        </section>
+        {showDeleteConfirm && (
+          <ConfirmModal
+            message="Tem certeza que deseja deletar sua conta? Todos os dados serão perdidos permanentemente."
+            onConfirm={handleDeleteAccount}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
+        )}
       </main>
     </div>
   );

@@ -408,7 +408,7 @@ export default function LojaPage() {
         <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
         <main className="mx-auto max-w-[1600px] px-4 py-6 lg:ml-[290px] lg:px-8 lg:py-8">
-          <section className="rounded-[32px] border border-white/30 bg-[var(--bgcard)]/82 p-4 shadow-[0_22px_70px_rgba(15,39,64,0.12)] backdrop-blur-xl lg:p-6">
+          <section className="grid gap-4 lg:grid-cols-3">
             <article className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-500">
