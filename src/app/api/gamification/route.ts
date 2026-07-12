@@ -34,6 +34,7 @@ export async function GET() {
       purchasedAiQueries: true,
       lastAiResponse: true,
       lastAiQueryAt: true,
+      email: true,
     },
   });
 
@@ -51,6 +52,16 @@ export async function GET() {
       ? usuario.lastAiResponse
       : null;
 
+  // detect admin role from NextAuth User table using the usuario email
+  let isAdmin = false;
+  if (usuario.email) {
+    const nextUser = await prisma.user.findUnique({
+      where: { email: usuario.email },
+      select: { role: true },
+    });
+    isAdmin = nextUser?.role === "USER_ADMIN";
+  }
+
   return NextResponse.json({
     ...buildGamificationStats(usuario),
     streakShields: usuario.streakShields,
@@ -63,5 +74,6 @@ export async function GET() {
     purchasedAiQueries: usuario.purchasedAiQueries,
     lastAiResponse,
     lastAiQueryAt: usuario.lastAiQueryAt,
+    isAdmin,
   });
 }

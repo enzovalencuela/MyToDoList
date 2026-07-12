@@ -37,6 +37,7 @@ interface UserShopState {
   unlockedThemes: string[];
   currentTheme: string | null;
   purchasedAiQueries: number;
+  isAdmin?: boolean;
 }
 
 async function fetchShopState() {
@@ -59,6 +60,7 @@ async function fetchShopState() {
     purchasedAiQueries: Number(
       data.purchasedAiQueries ?? data.advancedAiUses ?? 0,
     ),
+    isAdmin: Boolean(data.isAdmin ?? false),
   } as UserShopState;
 }
 
@@ -112,6 +114,7 @@ export default function LojaPage() {
     unlockedThemes: [],
     currentTheme: null,
     purchasedAiQueries: 0,
+    isAdmin: false,
   });
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
@@ -152,7 +155,7 @@ export default function LojaPage() {
   const previewThemeClass = previewTheme ? `theme-${previewTheme}` : "";
 
   async function handleBuyShield() {
-    if (state.xpPoints < SHOP_ITEM_COST) {
+    if (!state.isAdmin && state.xpPoints < SHOP_ITEM_COST) {
       toast.error("Você não tem XP suficiente para este item");
       return;
     }
@@ -395,6 +398,11 @@ export default function LojaPage() {
                 <span>
                   {session?.user?.name || session?.user?.email?.split("@")[0]}
                 </span>
+                {state.isAdmin && (
+                  <span className="ml-2 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-400">
+                    ADMIN
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => setShowSidebar(true)}
@@ -431,10 +439,18 @@ export default function LojaPage() {
               </div>
               <button
                 onClick={handleBuyShield}
-                disabled={buying || loading || state.xpPoints < SHOP_ITEM_COST}
+                disabled={
+                  buying ||
+                  loading ||
+                  (!state.isAdmin && state.xpPoints < SHOP_ITEM_COST)
+                }
                 className="mt-5 w-full rounded-full bg-gradient-to-r from-(--primary) to-(--secondary) px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {buying ? "Comprando..." : `Comprar por ${SHOP_ITEM_COST} XP`}
+                {buying
+                  ? "Comprando..."
+                  : state.isAdmin
+                    ? `Resgatar (Admin)`
+                    : `Comprar por ${SHOP_ITEM_COST} XP`}
               </button>
             </article>
 
@@ -479,12 +495,16 @@ export default function LojaPage() {
                 disabled={
                   buyingMultiplier ||
                   loading ||
-                  state.level < 2 ||
-                  state.xpPoints < 300
+                  (!state.isAdmin && state.level < 2) ||
+                  (!state.isAdmin && state.xpPoints < 300)
                 }
                 className="mt-5 w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {buyingMultiplier ? "Ativando..." : "Comprar por 300 XP"}
+                {buyingMultiplier
+                  ? "Ativando..."
+                  : state.isAdmin
+                    ? "Ativar (Admin)"
+                    : "Comprar por 300 XP"}
               </button>
             </article>
 
@@ -523,10 +543,18 @@ export default function LojaPage() {
               </div>
               <button
                 onClick={handleBuyFreeze}
-                disabled={buyingFreeze || loading || state.xpPoints < 800}
+                disabled={
+                  buyingFreeze ||
+                  loading ||
+                  (!state.isAdmin && state.xpPoints < 800)
+                }
                 className="mt-5 w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {buyingFreeze ? "Ativando..." : "Comprar por 800 XP"}
+                {buyingFreeze
+                  ? "Ativando..."
+                  : state.isAdmin
+                    ? "Ativar (Admin)"
+                    : "Comprar por 800 XP"}
               </button>
             </article>
           </section>
@@ -578,7 +606,9 @@ export default function LojaPage() {
                       type="button"
                       onClick={() => void handleBuyTheme(theme.key as ThemeKey)}
                       disabled={
-                        buyingTheme || loading || state.xpPoints < theme.cost
+                        buyingTheme ||
+                        loading ||
+                        (!state.isAdmin && state.xpPoints < theme.cost)
                       }
                       className={`inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
                     >
@@ -588,7 +618,9 @@ export default function LojaPage() {
                           ? active
                             ? "Equipado"
                             : "Equipar"
-                          : `Comprar (${theme.cost} XP)`}
+                          : state.isAdmin
+                            ? `Resgatar (Admin)`
+                            : `Comprar (${theme.cost} XP)`}
                     </button>
                   </div>
                 </article>
@@ -625,10 +657,18 @@ export default function LojaPage() {
             <button
               type="button"
               onClick={handleBuyAdvancedAi}
-              disabled={buyingAdvancedAi || loading || state.xpPoints < 150}
+              disabled={
+                buyingAdvancedAi ||
+                loading ||
+                (!state.isAdmin && state.xpPoints < 150)
+              }
               className="mt-5 whitespace-nowrap rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {buyingAdvancedAi ? "Processando..." : "Comprar (150 XP)"}
+              {buyingAdvancedAi
+                ? "Processando..."
+                : state.isAdmin
+                  ? "Resgatar (Admin)"
+                  : "Comprar (150 XP)"}
             </button>
           </section>
         </main>

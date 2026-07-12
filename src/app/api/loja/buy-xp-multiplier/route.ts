@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST() {
   const id_usuario = await getUsuarioId();
@@ -20,12 +22,21 @@ export async function POST() {
     );
   }
 
-  if (usuario.level < 2) {
+  const session = await getServerSession(authOptions);
+  const nextUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = nextUser?.role === "USER_ADMIN";
+
+  if (!isAdmin && usuario.level < 2) {
     return NextResponse.json({ error: "Requer nível 2" }, { status: 400 });
   }
 
   const cost = 300;
-  if (usuario.xpPoints < cost) {
+  if (!isAdmin && usuario.xpPoints < cost) {
     return NextResponse.json({ error: "XP insuficiente" }, { status: 400 });
   }
 
@@ -34,7 +45,7 @@ export async function POST() {
   const updatedUsuario = await prisma.usuario.update({
     where: { id_usuario },
     data: {
-      xpPoints: usuario.xpPoints - cost,
+      xpPoints: isAdmin ? usuario.xpPoints : usuario.xpPoints - cost,
       xpMultiplierExpiresAt: expiresAt,
     },
     select: { xpPoints: true, level: true, xpMultiplierExpiresAt: true },

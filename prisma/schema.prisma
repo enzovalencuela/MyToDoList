@@ -153,6 +153,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  role          Role      @default(USER_DEFAULT)
   password      String?
   accounts      Account[]
   sessions      Session[]
@@ -160,6 +161,12 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   @@map("next_auth_user")
+}
+
+enum Role {
+  USER_DEFAULT
+  USER_PREMIUM
+  USER_ADMIN
 }
 
 model Account {

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const VALID_THEMES = ["default", "emerald", "cyberpunk", "dracula"] as const;
 
@@ -17,7 +19,12 @@ export async function purchaseTheme(theme: string) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    select: { xpPoints: true, unlockedThemes: true, currentTheme: true },
+    select: {
+      xpPoints: true,
+      unlockedThemes: true,
+      currentTheme: true,
+      email: true,
+    },
   });
 
   if (!usuario) {
@@ -32,7 +39,17 @@ export async function purchaseTheme(theme: string) {
         : theme === "dracula"
           ? 800
           : 0;
-  if (cost > 0 && usuario.xpPoints < cost) {
+  // admin bypass: allow testing without cost
+  const session = await getServerSession(authOptions);
+  const nextUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = nextUser?.role === "USER_ADMIN";
+
+  if (!isAdmin && cost > 0 && usuario.xpPoints < cost) {
     return { success: false, error: "XP insuficiente" };
   }
 
@@ -42,7 +59,7 @@ export async function purchaseTheme(theme: string) {
   const updatedUsuario = await prisma.usuario.update({
     where: { id_usuario },
     data: {
-      xpPoints: usuario.xpPoints - cost,
+      xpPoints: isAdmin ? usuario.xpPoints : usuario.xpPoints - cost,
       unlockedThemes: Array.from(unlockedThemes),
       currentTheme: theme,
     },
@@ -104,8 +121,17 @@ export async function purchaseStreakFreeze() {
     return { success: false, error: "Usuário não encontrado" };
   }
 
+  const session = await getServerSession(authOptions);
+  const nextUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = nextUser?.role === "USER_ADMIN";
+
   const cost = 800;
-  if (usuario.xpPoints < cost) {
+  if (!isAdmin && usuario.xpPoints < cost) {
     return { success: false, error: "XP insuficiente" };
   }
 
@@ -119,7 +145,7 @@ export async function purchaseStreakFreeze() {
   const updatedUsuario = await prisma.usuario.update({
     where: { id_usuario },
     data: {
-      xpPoints: usuario.xpPoints - cost,
+      xpPoints: isAdmin ? usuario.xpPoints : usuario.xpPoints - cost,
       streakFrozenUntil: frozenUntil,
     },
     select: { xpPoints: true, streakFrozenUntil: true },
@@ -144,6 +170,7 @@ export async function purchaseAdvancedAi() {
       xpPoints: true,
       advancedAiUses: true,
       purchasedAiQueries: true,
+      email: true,
     },
   });
 
@@ -151,15 +178,24 @@ export async function purchaseAdvancedAi() {
     return { success: false, error: "Usuário não encontrado" };
   }
 
+  const session = await getServerSession(authOptions);
+  const nextUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = nextUser?.role === "USER_ADMIN";
+
   const cost = 150;
-  if (usuario.xpPoints < cost) {
+  if (!isAdmin && usuario.xpPoints < cost) {
     return { success: false, error: "XP insuficiente" };
   }
 
   const updatedUsuario = await prisma.usuario.update({
     where: { id_usuario },
     data: {
-      xpPoints: usuario.xpPoints - cost,
+      xpPoints: isAdmin ? usuario.xpPoints : usuario.xpPoints - cost,
       advancedAiUses: (usuario.advancedAiUses ?? 0) + 1,
       purchasedAiQueries: (usuario.purchasedAiQueries ?? 0) + 1,
     },

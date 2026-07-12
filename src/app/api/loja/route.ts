@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const id_usuario = await getUsuarioId();
@@ -26,16 +28,25 @@ export async function POST(req: Request) {
     );
   }
 
+  const session = await getServerSession(authOptions);
+  const nextUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = nextUser?.role === "USER_ADMIN";
+
   const cost = 500;
 
-  if (usuario.xpPoints < cost) {
+  if (!isAdmin && usuario.xpPoints < cost) {
     return NextResponse.json({ error: "XP insuficiente" }, { status: 400 });
   }
 
   const updatedUsuario = await prisma.usuario.update({
     where: { id_usuario },
     data: {
-      xpPoints: usuario.xpPoints - cost,
+      xpPoints: isAdmin ? usuario.xpPoints : usuario.xpPoints - cost,
       streakShields: usuario.streakShields + 1,
     },
     select: { xpPoints: true, streakShields: true },

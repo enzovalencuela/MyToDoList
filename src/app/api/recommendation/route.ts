@@ -142,6 +142,7 @@ export async function GET() {
           freeAiQueriesUsedToday: true,
           purchasedAiQueries: true,
           lastAiQueryAt: true,
+          email: true,
         },
       }),
     ]);
@@ -154,7 +155,17 @@ export async function GET() {
     : (userProfile?.freeAiQueriesUsedToday ?? 0);
   const purchasedAiQueries = userProfile?.purchasedAiQueries ?? 0;
 
-  if (freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
+  // if user is admin, bypass daily limit entirely
+  let isAdmin = false;
+  if (userProfile?.email) {
+    const nextUser = await prisma.user.findUnique({
+      where: { email: userProfile.email },
+      select: { role: true },
+    });
+    isAdmin = nextUser?.role === "USER_ADMIN";
+  }
+
+  if (!isAdmin && freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
     return NextResponse.json(
       {
         error:
@@ -181,12 +192,6 @@ Voce e um Mentor de Produtividade do Nexgen Tasks.
 Analise o dia do usuario e recomende 2 a 3 acoes concretas.
 
 Regras obrigatorias:
-- Use estritamente itens presentes em "tarefasPendentesHoje" ou "objetivosAtivosBacklog".
-- Nao invente cursos, projetos, tarefas ou tecnologias fora do contexto.
-- Considere a rotina fixa para identificar blocos ocupados e possiveis espacos vagos.
-- Seja especifico, pratico e curto.
-- ${advancedAnalysisEnabled ? "Mapeie o backlog com mais profundidade e priorize o que mais impacta o dia de hoje." : "Foque nas tarefas e metas mais imediatas."}
-- Responda apenas JSON valido, sem markdown, sem crases e sem texto extra.
 
 Formato exato:
 {
@@ -228,15 +233,18 @@ ${JSON.stringify(
     const normalized = normalizeRecommendation(parsed);
     const lastAiResponse = JSON.parse(JSON.stringify(normalized));
 
-    await prisma.usuario.update({
-      where: { id_usuario: userId },
-      data: {
-        freeAiQueriesUsedToday: nextFreeAiQueriesUsedToday,
-        purchasedAiQueries: nextPurchasedAiQueries,
-        lastAiQueryAt: today,
-        lastAiResponse,
-      },
-    });
+    // if admin, don't update daily counters/consume purchased queries
+    if (!isAdmin) {
+      await prisma.usuario.update({
+        where: { id_usuario: userId },
+        data: {
+          freeAiQueriesUsedToday: nextFreeAiQueriesUsedToday,
+          purchasedAiQueries: nextPurchasedAiQueries,
+          lastAiQueryAt: today,
+          lastAiResponse,
+        },
+      });
+    }
 
     return NextResponse.json(normalized);
   } catch (error) {
