@@ -318,6 +318,7 @@ async function handleStreakProtection(now: Date) {
       id_usuario: true,
       streakCount: true,
       streakShields: true,
+      streakFrozenUntil: true,
     },
   });
 
@@ -336,6 +337,19 @@ async function handleStreakProtection(now: Date) {
     });
 
     if (existingRecord) {
+      continue;
+    }
+
+    if (user.streakFrozenUntil && user.streakFrozenUntil >= yesterday) {
+      await prisma.streakHistory.create({
+        data: {
+          userId: user.id_usuario,
+          activityDate: yesterday,
+          xpEarned: 0,
+          protected: true,
+        },
+      });
+      protectedDays += 1;
       continue;
     }
 

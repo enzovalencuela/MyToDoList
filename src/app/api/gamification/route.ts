@@ -18,6 +18,11 @@ export async function GET() {
       xpPoints: true,
       level: true,
       streakShields: true,
+      streakFrozenUntil: true,
+      xpMultiplierExpiresAt: true,
+      unlockedThemes: true,
+      currentTheme: true,
+      advancedAiUses: true,
     },
   });
 
@@ -31,5 +36,10 @@ export async function GET() {
   return NextResponse.json({
     ...buildGamificationStats(usuario),
     streakShields: usuario.streakShields,
+    streakFrozenUntil: usuario.streakFrozenUntil,
+    xpMultiplierExpiresAt: usuario.xpMultiplierExpiresAt,
+    unlockedThemes: usuario.unlockedThemes,
+    currentTheme: usuario.currentTheme,
+    advancedAiUses: usuario.advancedAiUses,
   });
 }

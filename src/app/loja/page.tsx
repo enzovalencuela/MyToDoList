@@ -1,20 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Coins, Shield, Sparkles, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  BrainCircuit,
+  Coins,
+  Eye,
+  Shield,
+  Snowflake,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import {
+  equipTheme,
+  purchaseAdvancedAi,
+  purchaseStreakFreeze,
+  purchaseTheme,
+} from "./actions";
 
 const SHOP_ITEM_COST = 500;
+
+type ThemeKey = "default" | "emerald" | "cyberpunk" | "dracula";
 
 interface UserShopState {
   xpPoints: number;
   streakShields: number;
   level: number;
+  streakFrozenUntil: string | null;
   xpMultiplierExpiresAt: string | null;
   unlockedThemes: string[];
   currentTheme: string | null;
+  advancedAiUses: number;
 }
 
 async function fetchShopState() {
@@ -22,16 +42,19 @@ async function fetchShopState() {
   if (!res.ok) {
     throw new Error("Falha ao carregar o saldo de XP");
   }
+
   const data = await res.json();
   return {
     xpPoints: Number(data.xpPoints ?? 0),
     streakShields: Number(data.streakShields ?? 0),
     level: Number(data.level ?? 1),
+    streakFrozenUntil: data.streakFrozenUntil ?? null,
     xpMultiplierExpiresAt: data.xpMultiplierExpiresAt ?? null,
     unlockedThemes: Array.isArray(data.unlockedThemes)
       ? data.unlockedThemes
       : [],
     currentTheme: data.currentTheme ?? null,
+    advancedAiUses: Number(data.advancedAiUses ?? 0),
   } as UserShopState;
 }
 
@@ -73,55 +96,26 @@ async function buyXpMultiplierAction() {
   };
 }
 
-async function buyThemeAction(theme: string) {
-  const res = await fetch("/api/loja/buy-theme", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ theme }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Não foi possível comprar o tema");
-  }
-
-  return data as {
-    success: true;
-    xpPoints: number;
-    unlockedThemes: string[];
-    currentTheme: string | null;
-  };
-}
-
-async function selectThemeAction(theme: string) {
-  const res = await fetch("/api/loja/select-theme", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ theme }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Não foi possível equipar o tema");
-  }
-
-  return data as { success: true; currentTheme: string | null };
-}
-
 export default function LojaPage() {
   const router = useRouter();
+  const { setTheme } = useTheme();
   const [state, setState] = useState<UserShopState>({
     xpPoints: 0,
     streakShields: 0,
     level: 1,
+    streakFrozenUntil: null,
     xpMultiplierExpiresAt: null,
     unlockedThemes: [],
     currentTheme: null,
+    advancedAiUses: 0,
   });
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [buyingMultiplier, setBuyingMultiplier] = useState(false);
   const [buyingTheme, setBuyingTheme] = useState(false);
+  const [buyingFreeze, setBuyingFreeze] = useState(false);
+  const [buyingAdvancedAi, setBuyingAdvancedAi] = useState(false);
+  const [previewTheme, setPreviewTheme] = useState<ThemeKey | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -136,6 +130,21 @@ export default function LojaPage() {
     })();
   }, []);
 
+  const isXpMultiplierActive = useMemo(() => {
+    return Boolean(
+      state.xpMultiplierExpiresAt &&
+      new Date(state.xpMultiplierExpiresAt) > new Date(),
+    );
+  }, [state.xpMultiplierExpiresAt]);
+
+  const isStreakFrozen = useMemo(() => {
+    return Boolean(
+      state.streakFrozenUntil && new Date(state.streakFrozenUntil) > new Date(),
+    );
+  }, [state.streakFrozenUntil]);
+
+  const previewThemeClass = previewTheme ? `theme-${previewTheme}` : "";
+
   async function handleBuyShield() {
     if (state.xpPoints < SHOP_ITEM_COST) {
       toast.error("Você não tem XP suficiente para este item");
@@ -143,13 +152,12 @@ export default function LojaPage() {
     }
 
     setBuying(true);
-
     try {
       const result = await buyShieldAction();
       setState((prev) => ({
         ...prev,
-        xpPoints: result.xpPoints,
-        streakShields: result.streakShields,
+        xpPoints: result.xpPoints ?? prev.xpPoints,
+        streakShields: result.streakShields ?? prev.streakShields,
       }));
       toast.success("Escudo de Streak comprado com sucesso!");
       router.refresh();
@@ -173,9 +181,10 @@ export default function LojaPage() {
       const result = await buyXpMultiplierAction();
       setState((prev) => ({
         ...prev,
-        xpPoints: result.xpPoints,
-        level: result.level,
-        xpMultiplierExpiresAt: result.xpMultiplierExpiresAt,
+        xpPoints: result.xpPoints ?? prev.xpPoints,
+        level: result.level ?? prev.level,
+        xpMultiplierExpiresAt:
+          result.xpMultiplierExpiresAt ?? prev.xpMultiplierExpiresAt,
       }));
       toast.success("Multiplicador de XP ativado por 24 horas");
     } catch (error) {
@@ -187,24 +196,38 @@ export default function LojaPage() {
     }
   }
 
-  async function handleBuyTheme() {
-    if (state.unlockedThemes.includes("emerald")) {
-      const result = await selectThemeAction("emerald");
-      setState((prev) => ({ ...prev, currentTheme: result.currentTheme }));
-      toast.success("Tema Esmeralda equipado");
+  async function handleBuyTheme(theme: ThemeKey) {
+    if (state.unlockedThemes.includes(theme)) {
+      const result = await equipTheme(theme);
+      if (!result.success) {
+        toast.error(result.error ?? "Erro ao equipar tema");
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        currentTheme: result.currentTheme ?? prev.currentTheme,
+      }));
+      setTheme(theme === "default" ? "light" : theme);
+      toast.success(`Tema ${themeLabel(theme)} equipado`);
       return;
     }
 
     setBuyingTheme(true);
     try {
-      const result = await buyThemeAction("emerald");
+      const result = await purchaseTheme(theme);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       setState((prev) => ({
         ...prev,
-        xpPoints: result.xpPoints,
-        unlockedThemes: result.unlockedThemes,
-        currentTheme: result.currentTheme,
+        xpPoints: result.xpPoints ?? prev.xpPoints,
+        unlockedThemes: result.unlockedThemes ?? prev.unlockedThemes,
+        currentTheme: result.currentTheme ?? prev.currentTheme,
       }));
-      toast.success("Tema Esmeralda comprado e equipado");
+      setTheme(theme === "default" ? "light" : theme);
+      toast.success(`Tema ${themeLabel(theme)} comprado e equipado`);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erro ao comprar tema",
@@ -214,177 +237,437 @@ export default function LojaPage() {
     }
   }
 
-  const isXpMultiplierActive = Boolean(
-    state.xpMultiplierExpiresAt &&
-    new Date(state.xpMultiplierExpiresAt) > new Date(),
-  );
-  const hasUnlockedTheme = state.unlockedThemes.includes("emerald");
-  const isThemeActive = state.currentTheme === "emerald";
+  async function handleBuyFreeze() {
+    setBuyingFreeze(true);
+    try {
+      const result = await purchaseStreakFreeze();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      setState((prev) => ({
+        ...prev,
+        xpPoints: result.xpPoints ?? prev.xpPoints,
+        streakFrozenUntil: result.streakFrozenUntil
+          ? new Date(result.streakFrozenUntil).toISOString()
+          : null,
+      }));
+      toast.success("Congelador de Streak ativado por 7 dias");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao ativar congelador",
+      );
+    } finally {
+      setBuyingFreeze(false);
+    }
+  }
+
+  async function handleBuyAdvancedAi() {
+    setBuyingAdvancedAi(true);
+    try {
+      const result = await purchaseAdvancedAi();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      setState((prev) => ({
+        ...prev,
+        xpPoints: result.xpPoints ?? prev.xpPoints,
+        advancedAiUses: result.advancedAiUses ?? prev.advancedAiUses,
+      }));
+      toast.success("Análise Avançada da IA liberada");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Erro ao adquirir análise avançada",
+      );
+    } finally {
+      setBuyingAdvancedAi(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--text)]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 font-semibold text-[var(--primary)] transition hover:underline"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Voltar para o painel
-        </Link>
-
-        <header className="rounded-[28px] border border-[var(--subbackground)] bg-[var(--bgcard)] p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-3 py-1 text-sm font-semibold text-[var(--primary)]">
-                <Coins className="h-4 w-4" />
-                Loja de XP
+    <>
+      {previewThemeClass && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-6 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-3xl rounded-[28px] border border-white/20 bg-(--bgcard) p-5 shadow-2xl ${previewThemeClass}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-(--subText)">
+                  Preview
+                </p>
+                <h3 className="mt-2 text-xl font-bold text-(--text)">
+                  {themeLabel(previewTheme)}
+                </h3>
               </div>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Troque disciplina por proteção
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-[var(--subText)] sm:text-base">
-                Use seus pontos para fortalecer sua consistência e proteger sua
-                streak em dias difíceis.
-              </p>
+              <button
+                type="button"
+                onClick={() => setPreviewTheme(null)}
+                className="rounded-full p-2 text-(--subText) transition hover:bg-(--subbackground) hover:text-(--text)"
+              >
+                ✕
+              </button>
             </div>
-
-            <div className="rounded-2xl border border-[var(--subbackground)] bg-[var(--background)] px-4 py-4">
-              <p className="text-sm text-[var(--subText)]">Saldo atual</p>
-              <p className="mt-1 text-2xl font-black text-[var(--text)]">
-                {loading ? "—" : state.xpPoints} XP
-              </p>
-              <p className="mt-2 text-sm text-[var(--subText)]">
-                🛡️ {loading ? "—" : state.streakShields} escudos armazenados
-              </p>
+            <div className="mt-5 grid gap-4 lg:grid-cols-[220px_1fr]">
+              <div className="rounded-3xl border border-(--subbackground) bg-(--background) p-4">
+                <div className="space-y-3">
+                  <div className="h-3 w-16 rounded-full bg-(--primary)/40" />
+                  <div className="h-3 w-24 rounded-full bg-(--secondary)/40" />
+                  <div className="h-3 w-20 rounded-full bg-(--subbackground)" />
+                  <div className="h-3 w-28 rounded-full bg-(--subbackground)" />
+                </div>
+                <div className="mt-4 rounded-2xl bg-(--bgcard) p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-(--primary)" />
+                    <div className="h-3 flex-1 rounded-full bg-(--subbackground)" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-3xl border border-(--subbackground) bg-(--background) p-4">
+                <div className="flex items-center justify-between rounded-2xl border border-(--subbackground) bg-(--bgcard) px-3 py-2">
+                  <div className="h-3 w-24 rounded-full bg-(--subbackground)" />
+                  <div className="h-8 w-8 rounded-full bg-(--primary)" />
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-2xl border border-(--subbackground) bg-(--bgcard) p-4">
+                    <div className="h-3 w-24 rounded-full bg-(--subbackground)" />
+                    <div className="mt-3 h-20 rounded-2xl bg-(--background-2)" />
+                  </div>
+                  <div className="rounded-2xl border border-(--subbackground) bg-(--bgcard) p-4">
+                    <div className="h-3 w-24 rounded-full bg-(--subbackground)" />
+                    <div className="mt-3 h-20 rounded-2xl bg-(--primary)/10" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewTheme(null)}
+                className="rounded-full bg-(--primary) px-4 py-2 text-sm font-semibold text-white"
+              >
+                Fechar preview
+              </button>
             </div>
           </div>
-        </header>
+        </div>
+      )}
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          <article className="rounded-[24px] border border-[var(--subbackground)] bg-[var(--bgcard)] p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-500">
-                <Shield className="h-6 w-6" />
-              </div>
-              <span className="rounded-full bg-[var(--subbackground)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--subText)]">
-                Destaque
-              </span>
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-[var(--text)]">
-              Escudo de Streak
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--subText)]">
-              Proteja sua sequência de dias quando você perder uma atividade. O
-              escudo evita a quebra da streak e marca o dia como protegido no
-              calendário.
-            </p>
-            <div className="mt-4 rounded-2xl bg-[var(--subbackground)] p-3 text-sm text-[var(--subText)]">
-              <p>Funciona automaticamente no próximo ciclo diário.</p>
-            </div>
-            <button
-              onClick={handleBuyShield}
-              disabled={buying || loading || state.xpPoints < SHOP_ITEM_COST}
-              className="mt-5 w-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {buying ? "Comprando..." : `Comprar por ${SHOP_ITEM_COST} XP`}
-            </button>
-          </article>
-
-          <article
-            className={`rounded-[24px] border p-5 shadow-sm ${isThemeActive ? "border-emerald-400/60 bg-emerald-500/10" : "border-[var(--subbackground)] bg-[var(--bgcard)]"}`}
+      <div className="min-h-screen bg-(--background) px-4 py-8 text-(--text)">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 font-semibold text-(--primary) transition hover:underline"
           >
-            <div className="flex items-center justify-between">
-              <div
-                className={`rounded-2xl p-3 ${isThemeActive ? "bg-emerald-500/20 text-emerald-400" : "bg-[var(--subbackground)] text-[var(--subText)]"}`}
-              >
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${isThemeActive ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/10 text-amber-500"}`}
-              >
-                {hasUnlockedTheme
-                  ? isThemeActive
-                    ? "Equipado"
-                    : "Comprado"
-                  : "Disponível"}
-              </span>
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-[var(--text)]">
-              Tema Esmeralda
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--subText)]">
-              Troque os detalhes azuis por um visual neon verde para destacar
-              seu painel e suas ações principais.
-            </p>
-            <div className="mt-4 rounded-2xl bg-[var(--subbackground)] p-3 text-sm text-[var(--subText)]">
-              <p>Preço: 1000 XP • Compra única e equipável.</p>
-            </div>
-            <button
-              onClick={handleBuyTheme}
-              disabled={buyingTheme || loading || state.xpPoints < 1000}
-              className={`mt-5 w-full rounded-full px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${isThemeActive ? "bg-emerald-500" : "bg-gradient-to-r from-emerald-500 to-lime-500"}`}
-            >
-              {buyingTheme
-                ? "Processando..."
-                : hasUnlockedTheme
-                  ? isThemeActive
-                    ? "Equipado"
-                    : "Equipar Tema"
-                  : "Comprar por 1000 XP"}
-            </button>
-          </article>
+            <ArrowLeft className="h-5 w-5" />
+            Voltar para o painel
+          </Link>
 
-          <article
-            className={`rounded-[24px] border p-5 shadow-sm ${isXpMultiplierActive ? "border-amber-400/60 bg-amber-500/10" : "border-[var(--subbackground)] bg-[var(--bgcard)]"}`}
-          >
-            <div className="flex items-center justify-between">
-              <div
-                className={`rounded-2xl p-3 ${isXpMultiplierActive ? "bg-amber-500/20 text-amber-400" : "bg-[var(--subbackground)] text-[var(--subText)]"}`}
-              >
-                <Star className="h-6 w-6" />
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${isXpMultiplierActive ? "bg-amber-500/20 text-amber-400" : state.level >= 2 ? "bg-sky-500/10 text-sky-500" : "bg-slate-500/10 text-slate-400"}`}
-              >
-                {isXpMultiplierActive
-                  ? "Ativo"
-                  : state.level >= 2
-                    ? "Disponível"
-                    : "Bloqueado"}
-              </span>
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-[var(--text)]">
-              Multiplicador XP
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--subText)]">
-              Dobre a recompensa padrão de cada tarefa concluída por 24 horas.
-            </p>
-            <div className="mt-4 rounded-2xl bg-[var(--subbackground)] p-3 text-sm text-[var(--subText)]">
-              <p>Preço: 300 XP • Requer nível 2.</p>
-              {isXpMultiplierActive && (
-                <p className="mt-1 text-amber-400">
-                  Ativo até{" "}
-                  {new Date(state.xpMultiplierExpiresAt!).toLocaleString(
-                    "pt-BR",
-                  )}
+          <header className="rounded-[28px] border border-(--subbackground) bg-(--bgcard) p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-(--subbackground) px-3 py-1 text-sm font-semibold text-(--primary)">
+                  <Coins className="h-4 w-4" />
+                  Loja de XP
+                </div>
+                <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+                  Troque disciplina por proteção
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm text-(--subText) sm:text-base">
+                  Use seus pontos para fortalecer sua consistência e proteger
+                  sua streak em dias difíceis.
                 </p>
-              )}
+              </div>
+
+              <div className="rounded-2xl border border-(--subbackground) bg-(--background) px-4 py-4">
+                <p className="text-sm text-(--subText)">Saldo atual</p>
+                <p className="mt-1 text-2xl font-black text-(--text)">
+                  {loading ? "—" : state.xpPoints} XP
+                </p>
+                <p className="mt-2 text-sm text-(--subText)">
+                  🛡️ {loading ? "—" : state.streakShields} escudos armazenados
+                </p>
+              </div>
+            </div>
+          </header>
+
+          <section className="grid gap-4 lg:grid-cols-3">
+            <article className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-500">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <span className="rounded-full bg-(--subbackground) px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-(--subText)">
+                  Destaque
+                </span>
+              </div>
+              <h2 className="mt-4 text-xl font-bold text-(--text)">
+                Escudo de Streak
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-(--subText)">
+                Proteja sua sequência de dias quando você perder uma atividade.
+                O escudo evita a quebra da streak e marca o dia como protegido
+                no calendário.
+              </p>
+              <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
+                <p>Funciona automaticamente no próximo ciclo diário.</p>
+              </div>
+              <button
+                onClick={handleBuyShield}
+                disabled={buying || loading || state.xpPoints < SHOP_ITEM_COST}
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-(--primary) to-(--secondary) px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {buying ? "Comprando..." : `Comprar por ${SHOP_ITEM_COST} XP`}
+              </button>
+            </article>
+
+            <article
+              className={`rounded-3xl border p-5 shadow-sm ${isXpMultiplierActive ? "border-amber-400/60 bg-amber-500/10" : "border-(--subbackground) bg-(--bgcard)"}`}
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className={`rounded-2xl p-3 ${isXpMultiplierActive ? "bg-amber-500/20 text-amber-400" : "bg-(--subbackground) text-(--subText)"}`}
+                >
+                  <Star className="h-6 w-6" />
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${isXpMultiplierActive ? "bg-amber-500/20 text-amber-400" : state.level >= 2 ? "bg-sky-500/10 text-sky-500" : "bg-slate-500/10 text-slate-400"}`}
+                >
+                  {isXpMultiplierActive
+                    ? "Ativo"
+                    : state.level >= 2
+                      ? "Disponível"
+                      : "Bloqueado"}
+                </span>
+              </div>
+              <h2 className="mt-4 text-xl font-bold text-(--text)">
+                Multiplicador XP
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-(--subText)">
+                Dobre a recompensa padrão de cada tarefa concluída por 24 horas.
+              </p>
+              <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
+                <p>Preço: 300 XP • Requer nível 2.</p>
+                {isXpMultiplierActive && (
+                  <p className="mt-1 text-amber-400">
+                    Ativo até{" "}
+                    {new Date(state.xpMultiplierExpiresAt!).toLocaleString(
+                      "pt-BR",
+                    )}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleBuyXpMultiplier}
+                disabled={
+                  buyingMultiplier ||
+                  loading ||
+                  state.level < 2 ||
+                  state.xpPoints < 300
+                }
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {buyingMultiplier ? "Ativando..." : "Comprar por 300 XP"}
+              </button>
+            </article>
+
+            <article
+              className={`rounded-3xl border p-5 shadow-sm ${isStreakFrozen ? "border-cyan-400/60 bg-cyan-500/10" : "border-(--subbackground) bg-(--bgcard)"}`}
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className={`rounded-2xl p-3 ${isStreakFrozen ? "bg-cyan-500/20 text-cyan-400" : "bg-(--subbackground) text-(--subText)"}`}
+                >
+                  <Snowflake className="h-6 w-6" />
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${isStreakFrozen ? "bg-cyan-500/20 text-cyan-400" : "bg-slate-500/10 text-slate-400"}`}
+                >
+                  {isStreakFrozen ? "Ativo" : "Consumível"}
+                </span>
+              </div>
+              <h2 className="mt-4 text-xl font-bold text-(--text)">
+                Congelador de Streak
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-(--subText)">
+                Pause o reset da sua streak por 7 dias e viaje sem perder o
+                progresso acumulado.
+              </p>
+              <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
+                <p>
+                  Preço: 800 XP • Ativa até{" "}
+                  {isStreakFrozen
+                    ? new Date(state.streakFrozenUntil!).toLocaleDateString(
+                        "pt-BR",
+                      )
+                    : "uma data futura"}
+                  .
+                </p>
+              </div>
+              <button
+                onClick={handleBuyFreeze}
+                disabled={buyingFreeze || loading || state.xpPoints < 800}
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {buyingFreeze ? "Ativando..." : "Comprar por 800 XP"}
+              </button>
+            </article>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+            {themeDefinitions.map((theme) => {
+              const unlocked = state.unlockedThemes.includes(theme.key);
+              const active =
+                state.currentTheme === theme.key ||
+                (!state.currentTheme && theme.key === "default");
+
+              return (
+                <article
+                  key={theme.key}
+                  className={`rounded-3xl border p-5 shadow-sm ${active ? "border-(--primary)/40 bg-(--primary)/10" : "border-(--subbackground) bg-(--bgcard)"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`rounded-2xl p-3 ${active ? "bg-(--primary)/20 text-(--primary)" : "bg-(--subbackground) text-(--subText)"}`}
+                    >
+                      {theme.icon}
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${active ? "bg-(--primary)/20 text-(--primary)" : unlocked ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}
+                    >
+                      {active ? "Ativo" : unlocked ? "Comprado" : "Disponível"}
+                    </span>
+                  </div>
+                  <h2 className="mt-4 text-xl font-bold text-(--text)">
+                    {theme.name}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-(--subText)">
+                    {theme.description}
+                  </p>
+                  <div className="mt-4 rounded-2xl bg-(--subbackground) p-3 text-sm text-(--subText)">
+                    <p>
+                      Preço: {theme.cost} XP • {theme.type}
+                    </p>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTheme(theme.key)}
+                      className="inline-flex items-center gap-2 rounded-full border border-(--subbackground) px-3 py-2 text-sm font-semibold text-(--text) transition hover:bg-(--subbackground)"
+                    >
+                      <Eye className="h-4 w-4" /> Visualizar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleBuyTheme(theme.key as ThemeKey)}
+                      disabled={
+                        buyingTheme || loading || state.xpPoints < theme.cost
+                      }
+                      className={`inline-flex flex-1 items-center justify-center rounded-full px-4 py-2.5 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "bg-(--primary)" : "bg-gradient-to-r from-(--primary) to-(--secondary)"}`}
+                    >
+                      {buyingTheme
+                        ? "Processando..."
+                        : unlocked
+                          ? active
+                            ? "Equipado"
+                            : "Equipar"
+                          : `Comprar por ${theme.cost} XP`}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--subText)">
+                  Upgrade
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-(--text)">
+                  Análise Avançada da IA
+                </h2>
+              </div>
+              <div className="rounded-2xl bg-(--subbackground) p-3 text-(--primary)">
+                <BrainCircuit className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-(--subText)">
+              Compre um uso extra para a IA mapear melhor seu backlog e gerar
+              recomendações mais profundas na tela “Consultar IA”.
+            </p>
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-(--subbackground) px-4 py-3 text-sm text-(--subText)">
+              <span>
+                Preço: 150 XP • Uso extra atual: {state.advancedAiUses}
+              </span>
+              <span>{state.advancedAiUses > 0 ? "Ativo" : "Disponível"}</span>
             </div>
             <button
-              onClick={handleBuyXpMultiplier}
-              disabled={
-                buyingMultiplier ||
-                loading ||
-                state.level < 2 ||
-                state.xpPoints < 300
-              }
-              className="mt-5 w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={handleBuyAdvancedAi}
+              disabled={buyingAdvancedAi || loading || state.xpPoints < 150}
+              className="mt-5 rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {buyingMultiplier ? "Ativando..." : "Comprar por 300 XP"}
+              {buyingAdvancedAi ? "Processando..." : "Comprar por 150 XP"}
             </button>
-          </article>
-        </section>
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
+}
+
+const themeDefinitions = [
+  {
+    key: "default",
+    name: "Tema Padrão",
+    description:
+      "A paleta clássica do Nexgen Tasks com foco em clareza e leitura.",
+    cost: 0,
+    type: "Tema",
+    icon: <Sparkles className="h-6 w-6" />,
+  },
+  {
+    key: "emerald",
+    name: "Tema Esmeralda",
+    description:
+      "Muda o destaque do app para verde neon com uma sensação de foco e energia.",
+    cost: 1000,
+    type: "Tema",
+    icon: <Sparkles className="h-6 w-6" />,
+  },
+  {
+    key: "cyberpunk",
+    name: "Tema Cyberpunk",
+    description:
+      "Paleta rosa e roxo neon dramática para uma interface premium e futurista.",
+    cost: 1200,
+    type: "Tema",
+    icon: <Sparkles className="h-6 w-6" />,
+  },
+  {
+    key: "dracula",
+    name: "Tema Drácula",
+    description:
+      "Uma estética dark suave com detalhes roxo pastel para reduzir fadiga visual.",
+    cost: 800,
+    type: "Tema",
+    icon: <Sparkles className="h-6 w-6" />,
+  },
+] as const;
+
+function themeLabel(theme: ThemeKey | string | null | undefined) {
+  if (!theme || theme === "default") return "Tema padrão";
+  switch (theme) {
+    case "emerald":
+      return "Tema Esmeralda";
+    case "cyberpunk":
+      return "Tema Cyberpunk";
+    case "dracula":
+      return "Tema Drácula";
+    default:
+      return "Tema padrão";
+  }
 }

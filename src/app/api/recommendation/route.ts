@@ -91,49 +91,56 @@ export async function GET() {
   const todayDate = createDateOnly(todayKey);
   const dayOfWeek = today.getDay();
 
-  const [tasksToday, weeklyTasksToday, activeBacklogGoals] = await Promise.all([
-    prisma.tarefa.findMany({
-      where: {
-        id_usuario: userId,
-        data_prazo: todayDate,
-        estado_tarefa: { not: "Finalizada" },
-      },
-      orderBy: [{ prioridade: "asc" }, { ordem: "asc" }],
-      select: {
-        titulo: true,
-        descricao: true,
-        prioridade: true,
-        estado_tarefa: true,
-      },
-    }),
-    prisma.weeklyTask.findMany({
-      where: {
-        userId,
-        dayOfWeek,
-      },
-      orderBy: [{ startTime: "asc" }],
-      select: {
-        title: true,
-        startTime: true,
-        endTime: true,
-        category: true,
-      },
-    }),
-    prisma.backlogGoal.findMany({
-      where: {
-        userId,
-        status: { in: ["NOT_STARTED", "IN_PROGRESS"] },
-      },
-      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-      select: {
-        title: true,
-        description: true,
-        category: true,
-        status: true,
-        priority: true,
-      },
-    }),
-  ]);
+  const [tasksToday, weeklyTasksToday, activeBacklogGoals, userProfile] =
+    await Promise.all([
+      prisma.tarefa.findMany({
+        where: {
+          id_usuario: userId,
+          data_prazo: todayDate,
+          estado_tarefa: { not: "Finalizada" },
+        },
+        orderBy: [{ prioridade: "asc" }, { ordem: "asc" }],
+        select: {
+          titulo: true,
+          descricao: true,
+          prioridade: true,
+          estado_tarefa: true,
+        },
+      }),
+      prisma.weeklyTask.findMany({
+        where: {
+          userId,
+          dayOfWeek,
+        },
+        orderBy: [{ startTime: "asc" }],
+        select: {
+          title: true,
+          startTime: true,
+          endTime: true,
+          category: true,
+        },
+      }),
+      prisma.backlogGoal.findMany({
+        where: {
+          userId,
+          status: { in: ["NOT_STARTED", "IN_PROGRESS"] },
+        },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        select: {
+          title: true,
+          description: true,
+          category: true,
+          status: true,
+          priority: true,
+        },
+      }),
+      prisma.usuario.findUnique({
+        where: { id_usuario: userId },
+        select: { advancedAiUses: true },
+      }),
+    ]);
+
+  const advancedAnalysisEnabled = (userProfile?.advancedAiUses ?? 0) > 0;
 
   const prompt = `
 Voce e um Mentor de Produtividade do Nexgen Tasks.
@@ -144,6 +151,7 @@ Regras obrigatorias:
 - Nao invente cursos, projetos, tarefas ou tecnologias fora do contexto.
 - Considere a rotina fixa para identificar blocos ocupados e possiveis espacos vagos.
 - Seja especifico, pratico e curto.
+- ${advancedAnalysisEnabled ? "Mapeie o backlog com mais profundidade e priorize o que mais impacta o dia de hoje." : "Foque nas tarefas e metas mais imediatas."}
 - Responda apenas JSON valido, sem markdown, sem crases e sem texto extra.
 
 Formato exato:

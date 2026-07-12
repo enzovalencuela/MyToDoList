@@ -31,7 +31,8 @@
   --foreground: #e9f4ff;
 }
 
-[data-theme="emerald"] {
+[data-theme="emerald"],
+.theme-emerald {
   --primary: #10b981;
   --secondary: #34d399;
   --background: #04110c;
@@ -44,6 +45,38 @@
   --buttonRed: #f87171;
   --taskcompleted: #1f4a3b;
   --foreground: #ecfdf5;
+}
+
+[data-theme="cyberpunk"],
+.theme-cyberpunk {
+  --primary: #ff2ea8;
+  --secondary: #7c3aed;
+  --background: #09020f;
+  --background-2: #13061d;
+  --subbackground: #25123b;
+  --bgcard: #160a25;
+  --text: #fff4ff;
+  --subText: #e7a8f1;
+  --button: #6d28d9;
+  --buttonRed: #fb7185;
+  --taskcompleted: #3b1f5b;
+  --foreground: #fff4ff;
+}
+
+[data-theme="dracula"],
+.theme-dracula {
+  --primary: #9b8cff;
+  --secondary: #c7b8ff;
+  --background: #0f0b18;
+  --background-2: #171126;
+  --subbackground: #201836;
+  --bgcard: #161020;
+  --text: #f7f2ff;
+  --subText: #cdbdf7;
+  --button: #3b2a69;
+  --buttonRed: #ff7aa2;
+  --taskcompleted: #2c2344;
+  --foreground: #f7f2ff;
 }
 
 @theme inline {

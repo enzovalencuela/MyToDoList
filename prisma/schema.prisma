@@ -22,9 +22,11 @@ model Usuario {
   xpPoints     Int       @default(0) @map("xp_points")
   level        Int       @default(1)
   streakShields Int      @default(0) @map("streak_shields")
+  streakFrozenUntil DateTime? @map("streak_frozen_until")
   xpMultiplierExpiresAt DateTime? @map("xp_multiplier_expires_at")
   unlockedThemes String[] @default([]) @map("unlocked_themes")
   currentTheme String? @default("default") @map("current_theme")
+  advancedAiUses Int @default(0) @map("advanced_ai_uses")
   lastActiveDay DateTime? @db.Date @map("last_active_day")
   data_criacao DateTime? @default(now())
   tarefas      Tarefa[]
