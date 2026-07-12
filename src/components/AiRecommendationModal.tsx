@@ -101,7 +101,7 @@ export default function AiRecommendationModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 gap-6">
+        <div className="flex flex-col min-h-0 flex-1 overflow-y-auto px-6 py-6 gap-6">
           {!loading && !recommendation && (
             <div className="rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] px-5 py-8 text-center">
               <BrainCircuit className="mx-auto h-12 w-12 text-[var(--primary)]" />
