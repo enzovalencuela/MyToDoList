@@ -361,7 +361,7 @@ export default function LojaPage() {
         </div>
       )}
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(75,185,255,0.22),_transparent_32%),linear-gradient(180deg,var(--background),var(--background-2))]">
+      <div className="min-h-screen bg-[var(--background)]">
         <ToastContainer
           position="bottom-left"
           autoClose={3000}
