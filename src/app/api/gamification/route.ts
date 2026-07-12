@@ -3,6 +3,13 @@ import { buildGamificationStats } from "@/lib/gamification";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
 
+function getLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export async function GET() {
   const id_usuario = await getUsuarioId();
 
@@ -25,6 +32,7 @@ export async function GET() {
       advancedAiUses: true,
       freeAiQueriesUsedToday: true,
       purchasedAiQueries: true,
+      lastAiResponse: true,
       lastAiQueryAt: true,
     },
   });
@@ -36,6 +44,13 @@ export async function GET() {
     );
   }
 
+  const todayKey = getLocalDateKey(new Date());
+  const lastAiResponse =
+    usuario.lastAiQueryAt &&
+    getLocalDateKey(new Date(usuario.lastAiQueryAt)) === todayKey
+      ? usuario.lastAiResponse
+      : null;
+
   return NextResponse.json({
     ...buildGamificationStats(usuario),
     streakShields: usuario.streakShields,
@@ -46,6 +61,7 @@ export async function GET() {
     advancedAiUses: usuario.advancedAiUses,
     freeAiQueriesUsedToday: usuario.freeAiQueriesUsedToday,
     purchasedAiQueries: usuario.purchasedAiQueries,
+    lastAiResponse,
     lastAiQueryAt: usuario.lastAiQueryAt,
   });
 }

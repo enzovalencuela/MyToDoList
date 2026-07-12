@@ -28,6 +28,7 @@ import {
   CalendarX2,
   Sparkles,
 } from "lucide-react";
+import type { RecommendationResponse } from "@/lib/recommendation";
 
 import TaskCard, { type Todo } from "@/components/TaskCard";
 import AddTaskForm from "@/components/AddTaskForm";
@@ -57,10 +58,18 @@ export default function DashboardPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [aiQuota, setAiQuota] = useState({
+  const [aiQuota, setAiQuota] = useState<{
+    canUseAi: boolean;
+    purchasedAiQueries: number;
+    freeAiQueriesUsedToday: number;
+    lastAiResponse: RecommendationResponse | null;
+    lastAiQueryAt: string | null;
+  }>({
     canUseAi: true,
     purchasedAiQueries: 0,
     freeAiQueriesUsedToday: 0,
+    lastAiResponse: null,
+    lastAiQueryAt: null,
   });
 
   const sensors = useSensors(
@@ -86,11 +95,19 @@ export default function DashboardPage() {
       const data = await res.json();
       const purchasedAiQueries = Number(data.purchasedAiQueries ?? 0);
       const freeAiQueriesUsedToday = Number(data.freeAiQueriesUsedToday ?? 0);
+      const lastAiResponse =
+        data.lastAiResponse && typeof data.lastAiResponse === "object"
+          ? (data.lastAiResponse as RecommendationResponse)
+          : null;
+      const lastAiQueryAt =
+        typeof data.lastAiQueryAt === "string" ? data.lastAiQueryAt : null;
 
       setAiQuota({
         canUseAi: freeAiQueriesUsedToday < 1 || purchasedAiQueries > 0,
         purchasedAiQueries,
         freeAiQueriesUsedToday,
+        lastAiResponse,
+        lastAiQueryAt,
       });
     } catch {
       setAiQuota((prev) => prev);
@@ -321,17 +338,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-6">
           <div className="space-y-6">
             <button
-              onClick={() => {
-                if (!aiQuota.canUseAi) {
-                  toast.error(
-                    "Você já usou a consulta gratuita de hoje e não possui consultas extras.",
-                  );
-                  return;
-                }
-                setShowAiRecommendation(true);
-              }}
-              disabled={!aiQuota.canUseAi}
-              className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[var(--primary)]/20 bg-[var(--bgcard)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={() => setShowAiRecommendation(true)}
+              className="group flex w-full items-center justify-between gap-4 rounded-[28px] border border-[var(--primary)]/20 bg-[var(--bgcard)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--primary)]/40 hover:shadow-md"
             >
               <span className="flex min-w-0 items-center gap-3">
                 <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)]/15 text-[var(--primary)]">
@@ -552,6 +560,8 @@ export default function DashboardPage() {
           onClose={() => setShowAiRecommendation(false)}
           canUseAi={aiQuota.canUseAi}
           purchasedAiQueries={aiQuota.purchasedAiQueries}
+          lastAiResponse={aiQuota.lastAiResponse}
+          lastAiQueryAt={aiQuota.lastAiQueryAt}
           onQuotaUpdated={loadAiQuota}
         />
       )}

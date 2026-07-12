@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import type { RecommendationResponse } from "@/lib/recommendation";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
 
@@ -172,15 +173,6 @@ export async function GET() {
       ? purchasedAiQueries - 1
       : purchasedAiQueries;
 
-  await prisma.usuario.update({
-    where: { id_usuario: userId },
-    data: {
-      freeAiQueriesUsedToday: nextFreeAiQueriesUsedToday,
-      purchasedAiQueries: nextPurchasedAiQueries,
-      lastAiQueryAt: today,
-    },
-  });
-
   const advancedAnalysisEnabled =
     (userProfile?.advancedAiUses ?? 0) > 0 || purchasedAiQueries > 0;
 
@@ -233,8 +225,20 @@ ${JSON.stringify(
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const parsed = JSON.parse(stripJsonFence(text)) as unknown;
+    const normalized = normalizeRecommendation(parsed);
+    const lastAiResponse = JSON.parse(JSON.stringify(normalized));
 
-    return NextResponse.json(normalizeRecommendation(parsed));
+    await prisma.usuario.update({
+      where: { id_usuario: userId },
+      data: {
+        freeAiQueriesUsedToday: nextFreeAiQueriesUsedToday,
+        purchasedAiQueries: nextPurchasedAiQueries,
+        lastAiQueryAt: today,
+        lastAiResponse,
+      },
+    });
+
+    return NextResponse.json(normalized);
   } catch (error) {
     return NextResponse.json(
       {

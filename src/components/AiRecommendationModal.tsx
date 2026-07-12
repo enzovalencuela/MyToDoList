@@ -5,61 +5,13 @@ import { BrainCircuit, Clock3, RefreshCw, Sparkles, X } from "lucide-react";
 import { toast } from "react-toastify";
 import type { RecommendationResponse } from "@/lib/recommendation";
 
-const RECOMMENDATION_CACHE_KEY = "@nexgen-tasks:last-recommendation";
-
 interface AiRecommendationModalProps {
   onClose: () => void;
   canUseAi: boolean;
   purchasedAiQueries: number;
+  lastAiResponse: RecommendationResponse | null;
+  lastAiQueryAt: string | null;
   onQuotaUpdated: () => Promise<void> | void;
-}
-
-interface CachedRecommendation {
-  generatedAt: string;
-  dateKey: string;
-  data: RecommendationResponse;
-}
-
-function getLocalDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function isRecommendationResponse(
-  value: unknown,
-): value is RecommendationResponse {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const payload = value as Record<string, unknown>;
-  return (
-    typeof payload.saudacao === "string" && Array.isArray(payload.recomendacoes)
-  );
-}
-
-function parseCachedRecommendation(value: string | null) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(value) as Partial<CachedRecommendation>;
-
-    if (
-      typeof parsed.generatedAt !== "string" ||
-      typeof parsed.dateKey !== "string" ||
-      !isRecommendationResponse(parsed.data)
-    ) {
-      return null;
-    }
-
-    return parsed as CachedRecommendation;
-  } catch {
-    return null;
-  }
 }
 
 function formatGeneratedAt(value: string) {
@@ -75,41 +27,19 @@ function formatGeneratedAt(value: string) {
   })}`;
 }
 
-function getValidCachedRecommendation() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const cachedRecommendation = parseCachedRecommendation(
-    window.localStorage.getItem(RECOMMENDATION_CACHE_KEY),
-  );
-
-  if (!cachedRecommendation) {
-    return null;
-  }
-
-  const todayKey = getLocalDateKey(new Date());
-
-  if (cachedRecommendation.dateKey !== todayKey) {
-    window.localStorage.removeItem(RECOMMENDATION_CACHE_KEY);
-    return null;
-  }
-
-  return cachedRecommendation;
-}
-
 export default function AiRecommendationModal({
   onClose,
   canUseAi,
   purchasedAiQueries,
+  lastAiResponse,
+  lastAiQueryAt,
   onQuotaUpdated,
 }: AiRecommendationModalProps) {
-  const [cachedRecommendation] = useState(getValidCachedRecommendation);
   const [loading, setLoading] = useState(false);
   const [recommendation, setRecommendation] =
-    useState<RecommendationResponse | null>(cachedRecommendation?.data ?? null);
+    useState<RecommendationResponse | null>(lastAiResponse);
   const [generatedAt, setGeneratedAt] = useState<string | null>(
-    cachedRecommendation?.generatedAt ?? null,
+    lastAiQueryAt ?? null,
   );
 
   async function fetchRecommendation() {
@@ -138,18 +68,8 @@ export default function AiRecommendationModal({
     }
 
     const now = new Date();
-    const cachePayload: CachedRecommendation = {
-      generatedAt: now.toISOString(),
-      dateKey: getLocalDateKey(now),
-      data: result,
-    };
-
-    window.localStorage.setItem(
-      RECOMMENDATION_CACHE_KEY,
-      JSON.stringify(cachePayload),
-    );
     setRecommendation(result);
-    setGeneratedAt(cachePayload.generatedAt);
+    setGeneratedAt(now.toISOString());
     await onQuotaUpdated();
   }
 
@@ -226,6 +146,27 @@ export default function AiRecommendationModal({
             </div>
           )}
 
+          {!loading && !recommendation && !canUseAi && (
+            <div className="rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] p-6 text-center text-sm text-[var(--subText)]">
+              <p className="font-semibold text-[var(--text)] mb-2">
+                Limite diário atingido.
+              </p>
+              <p>
+                Você já usou sua consulta gratuita e não possui consultas extras
+                no momento.
+              </p>
+              {lastAiResponse ? (
+                <p className="mt-3 text-sm text-[var(--subText)]">
+                  Exibindo sua última sugestão gravada de hoje.
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-[var(--subText)]">
+                  Nenhuma sugestão anterior salva ainda.
+                </p>
+              )}
+            </div>
+          )}
+
           {recommendation && (
             <div>
               <div className="rounded-3xl border border-[var(--primary)]/20 bg-[var(--primary)]/10 p-5">
@@ -275,6 +216,12 @@ export default function AiRecommendationModal({
               >
                 <RefreshCw className="h-4 w-4" /> Atualizar recomendacoes
               </button>
+            </div>
+          )}
+          {!loading && !recommendation && lastAiResponse && canUseAi && (
+            <div className="rounded-3xl border border-[var(--subbackground)] bg-[var(--background)] p-5 text-sm text-[var(--subText)]">
+              Sua última sugestão ainda está disponível e será atualizada quando
+              você gerar uma nova consulta.
             </div>
           )}
         </div>
