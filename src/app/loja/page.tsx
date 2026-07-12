@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowLeft,
   BrainCircuit,
-  Coins,
   Eye,
+  Menu,
   Shield,
   Snowflake,
   Sparkles,
   Star,
+  User,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
@@ -21,6 +20,9 @@ import {
   purchaseStreakFreeze,
   purchaseTheme,
 } from "./actions";
+import NexgenLogo from "@/components/NexgenLogo";
+import Sidebar from "@/components/Sidebar";
+import { useSession } from "next-auth/react";
 
 const SHOP_ITEM_COST = 500;
 
@@ -118,6 +120,8 @@ export default function LojaPage() {
   const [buyingFreeze, setBuyingFreeze] = useState(false);
   const [buyingAdvancedAi, setBuyingAdvancedAi] = useState(false);
   const [previewTheme, setPreviewTheme] = useState<ThemeKey | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     void (async () => {
@@ -359,41 +363,45 @@ export default function LojaPage() {
 
       <div className="min-h-screen bg-(--background) px-4 py-8 text-(--text)">
         <div className="mx-auto flex max-w-6xl flex-col gap-6">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 font-semibold text-(--primary) transition hover:underline"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Voltar para o painel
-          </Link>
-
-          <header className="rounded-[28px] border border-(--subbackground) bg-(--bgcard) p-6 shadow-sm sm:p-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-(--subbackground) px-3 py-1 text-sm font-semibold text-(--primary)">
-                  <Coins className="h-4 w-4" />
-                  Loja de XP
+          <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:hidden">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <NexgenLogo className="h-8 w-8" />
+                <div>
+                  <h1 className="truncate text-lg font-bold text-[var(--text)]">
+                    Agenda Semanal
+                  </h1>
+                  <p className="text-xs text-[var(--subText)]">
+                    Blocos fixos da sua rotina
+                  </p>
                 </div>
-                <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                  Troque disciplina por proteção
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm text-(--subText) sm:text-base">
-                  Use seus pontos para fortalecer sua consistência e proteger
-                  sua streak em dias difíceis.
-                </p>
               </div>
-
-              <div className="rounded-2xl border border-(--subbackground) bg-(--background) px-4 py-4">
-                <p className="text-sm text-(--subText)">Saldo atual</p>
-                <p className="mt-1 text-2xl font-black text-(--text)">
-                  {loading ? "—" : state.xpPoints} XP
-                </p>
-                <p className="mt-2 text-sm text-(--subText)">
-                  🛡️ {loading ? "—" : state.streakShields} escudos armazenados
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
+                  {session?.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt=""
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-5 w-5" />
+                  )}
+                  <span>
+                    {session?.user?.name || session?.user?.email?.split("@")[0]}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowSidebar(true)}
+                  className="rounded-full p-2 transition hover:bg-[var(--subbackground)]"
+                >
+                  <Menu className="h-6 w-6 text-[var(--text)]" />
+                </button>
               </div>
             </div>
           </header>
+
+          <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
           <section className="grid gap-4 lg:grid-cols-3">
             <article className="rounded-3xl border border-(--subbackground) bg-(--bgcard) p-5 shadow-sm">

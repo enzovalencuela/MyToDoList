@@ -4,13 +4,13 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  ArrowLeft,
   Lock,
   Trash2,
-  User,
   Mail,
+  Menu,
   ShieldCheck,
   Trophy,
+  User,
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +18,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ConfirmModal from "@/components/ConfirmModal";
 import GamificationProgress from "@/components/GamificationProgress";
+import NexgenLogo from "@/components/NexgenLogo";
+import Sidebar from "@/components/Sidebar";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -29,6 +31,7 @@ export default function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Check if user logged in via credentials (has password)
   const isCredentialsUser = !session?.user?.image; // Google users have image
@@ -94,12 +97,45 @@ export default function ProfilePage() {
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
       <ToastContainer position="bottom-left" autoClose={3000} theme="colored" />
 
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 mb-6 gradient-text font-bold hover:underline"
-      >
-        <ArrowLeft className="w-5 h-5" /> Voltar
-      </Link>
+      <header className="sticky top-0 z-20 border-b border-[var(--subbackground)]/60 bg-[var(--background)]/88 backdrop-blur-lg lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <NexgenLogo className="h-8 w-8" />
+            <div>
+              <h1 className="truncate text-lg font-bold text-[var(--text)]">
+                Agenda Semanal
+              </h1>
+              <p className="text-xs text-[var(--subText)]">
+                Blocos fixos da sua rotina
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 text-sm text-[var(--subText)] sm:flex">
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="h-7 w-7 rounded-full object-cover"
+                />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+              <span>
+                {session?.user?.name || session?.user?.email?.split("@")[0]}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowSidebar(true)}
+              className="rounded-full p-2 transition hover:bg-[var(--subbackground)]"
+            >
+              <Menu className="h-6 w-6 text-[var(--text)]" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <Sidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
 
       <h1 className="text-3xl font-bold gradient-text mb-8">Meu Perfil</h1>
 

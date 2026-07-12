@@ -152,11 +152,10 @@ export default async function ConquistasPage() {
     <div className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <Link
-          href="/profile"
-          className="inline-flex items-center gap-2 font-semibold text-[var(--primary)] transition hover:underline"
+          href="/dashboard"
+          className="inline-flex items-center gap-2 mb-6 gradient-text font-bold hover:underline"
         >
-          <ArrowLeft className="h-5 w-5" />
-          Voltar para o perfil
+          <ArrowLeft className="w-5 h-5" /> Voltar
         </Link>
 
         <header className="rounded-[28px] border border-[var(--subbackground)] bg-[var(--bgcard)] p-6 shadow-sm sm:p-8">
