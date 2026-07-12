@@ -11,6 +11,7 @@ import {
   Mail,
   ShieldCheck,
   Trophy,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
@@ -205,6 +206,16 @@ export default function ProfilePage() {
             hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 transition-all"
         >
           {deleting ? "Deletando..." : "Deletar Minha Conta"}
+        </button>
+      </div>
+
+      <div className="bg-[var(--bgcard)] rounded-2xl p-6 shadow-md border border-red-500/20">
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sair</span>
         </button>
       </div>
 

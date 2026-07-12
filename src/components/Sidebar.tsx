@@ -191,9 +191,6 @@ function SidebarContent({
       </nav>
 
       <div className="border-t border-[var(--subbackground)] px-3 py-3">
-        <div className="mb-2 flex items-center justify-center gap-2 rounded-xl bg-[var(--background)] px-2 py-2 text-[var(--text)]">
-          <ThemeSwitch />
-        </div>
         <div className="flex items-center justify-between rounded-xl bg-[var(--background)] px-3 py-2 text-[11px] text-[var(--subText)]">
           {supportNavItems.map((item) => {
             const active =
@@ -211,13 +208,6 @@ function SidebarContent({
             );
           })}
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/10"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sair</span>
-        </button>
       </div>
     </div>
   );
