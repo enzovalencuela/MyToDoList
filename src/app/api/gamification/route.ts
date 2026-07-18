@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildGamificationStats } from "@/lib/gamification";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 function getLocalDateKey(date: Date) {
   const year = date.getFullYear();
@@ -34,7 +35,7 @@ export async function GET() {
       purchasedAiQueries: true,
       lastAiResponse: true,
       lastAiQueryAt: true,
-      email: true,
+      role: true,
     },
   });
 
@@ -52,15 +53,10 @@ export async function GET() {
       ? usuario.lastAiResponse
       : null;
 
-  // detect admin role from NextAuth User table using the usuario email
-  let isAdmin = false;
-  if (usuario.email) {
-    const nextUser = await prisma.user.findUnique({
-      where: { email: usuario.email },
-      select: { role: true },
-    });
-    isAdmin = nextUser?.role === "USER_ADMIN";
-  }
+  const isAdminRole = usuario.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = isAdminRole && adminModeCookie;
 
   return NextResponse.json({
     ...buildGamificationStats(usuario),
@@ -74,6 +70,7 @@ export async function GET() {
     purchasedAiQueries: usuario.purchasedAiQueries,
     lastAiResponse,
     lastAiQueryAt: usuario.lastAiQueryAt,
+    isAdminRole,
     isAdmin,
   });
 }

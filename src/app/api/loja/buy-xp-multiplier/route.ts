@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function POST() {
   const id_usuario = await getUsuarioId();
@@ -12,7 +11,12 @@ export async function POST() {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id_usuario },
-    select: { xpPoints: true, level: true, xpMultiplierExpiresAt: true },
+    select: {
+      xpPoints: true,
+      level: true,
+      xpMultiplierExpiresAt: true,
+      role: true,
+    },
   });
 
   if (!usuario) {
@@ -22,14 +26,9 @@ export async function POST() {
     );
   }
 
-  const session = await getServerSession(authOptions);
-  const nextUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true },
-      })
-    : null;
-  const isAdmin = nextUser?.role === "USER_ADMIN";
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = usuario.role === "USER_ADMIN" && adminModeCookie;
 
   if (!isAdmin && usuario.level < 2) {
     return NextResponse.json({ error: "Requer nível 2" }, { status: 400 });

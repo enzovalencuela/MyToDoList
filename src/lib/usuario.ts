@@ -13,18 +13,27 @@ export async function getOrCreateUsuario() {
     where: { email: session.user.email },
   });
 
+  // sync role from NextAuth User table (single source of truth for auth)
+  const nextAuthUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true },
+  });
+
+  const roleToSet = nextAuthUser?.role ?? "USER_DEFAULT";
+
   if (!usuario) {
     usuario = await prisma.usuario.create({
       data: {
         email: session.user.email,
         name: session.user.name ?? null,
         lastActiveAt: new Date(),
+        role: roleToSet,
       },
     });
   } else {
     usuario = await prisma.usuario.update({
       where: { id_usuario: usuario.id_usuario },
-      data: { lastActiveAt: new Date() },
+      data: { lastActiveAt: new Date(), role: roleToSet },
     });
   }
 

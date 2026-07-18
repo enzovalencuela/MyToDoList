@@ -4,6 +4,7 @@ import type { RecommendationResponse } from "@/lib/recommendation";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUsuarioId } from "@/lib/usuario";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -142,7 +143,7 @@ export async function GET() {
           freeAiQueriesUsedToday: true,
           purchasedAiQueries: true,
           lastAiQueryAt: true,
-          email: true,
+          role: true,
         },
       }),
     ]);
@@ -155,15 +156,10 @@ export async function GET() {
     : (userProfile?.freeAiQueriesUsedToday ?? 0);
   const purchasedAiQueries = userProfile?.purchasedAiQueries ?? 0;
 
-  // if user is admin, bypass daily limit entirely
-  let isAdmin = false;
-  if (userProfile?.email) {
-    const nextUser = await prisma.user.findUnique({
-      where: { email: userProfile.email },
-      select: { role: true },
-    });
-    isAdmin = nextUser?.role === "USER_ADMIN";
-  }
+  // if user is admin, bypass daily limit entirely (role synced on Usuario)
+  const adminModeCookie =
+    (await cookies()).get("admin_mode_enabled")?.value === "true";
+  const isAdmin = userProfile?.role === "USER_ADMIN" && adminModeCookie;
 
   if (!isAdmin && freeAiQueriesUsedToday >= 1 && purchasedAiQueries <= 0) {
     return NextResponse.json(
