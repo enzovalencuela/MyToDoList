@@ -7,6 +7,7 @@ import {
   Bot,
   CalendarClock,
   Loader2,
+  Send,
   TimerReset,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -103,7 +104,11 @@ export default function PushNotificationSettings({
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
+  const [sendingTest, setSendingTest] = useState(false);
   const [isSavingSettings, startSavingSettings] = useTransition();
+  const isAdminMode =
+    typeof window !== "undefined" &&
+    document.cookie.includes("admin_mode_enabled=true");
 
   useEffect(() => {
     const hasSupport = isPushSupported();
@@ -211,6 +216,38 @@ export default function PushNotificationSettings({
     });
   }
 
+  async function sendTestNotification() {
+    setSendingTest(true);
+
+    try {
+      const response = await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Nexgen Tasks",
+          body: "Suas notificacoes push estao funcionando.",
+          url: "/dashboard",
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        toast.error(result.error ?? "Nao foi possivel enviar o teste.");
+        return;
+      }
+
+      toast.success("Notificacao de teste enviada.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel enviar o teste.",
+      );
+    } finally {
+      setSendingTest(false);
+    }
+  }
+
   return (
     <div className="space-y-5 border-t border-[var(--subbackground)] pt-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -258,6 +295,22 @@ export default function PushNotificationSettings({
           </button>
         </div>
       </div>
+
+      {subscribed && isAdminMode && (
+        <button
+          type="button"
+          onClick={sendTestNotification}
+          disabled={sendingTest}
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--subbackground)] px-5 py-3 text-sm font-bold text-[var(--text)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0"
+        >
+          {sendingTest ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+          Testar como {isAdminMode ? "Admin" : "Usuário"}
+        </button>
+      )}
 
       <div className="space-y-3">
         <NotificationToggle
