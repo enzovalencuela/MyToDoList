@@ -102,8 +102,28 @@ export default function DashboardPage() {
       const lastAiQueryAt =
         typeof data.lastAiQueryAt === "string" ? data.lastAiQueryAt : null;
 
+      // 1. Checagem segura do Cookie do Modo Admin no lado do cliente
+      const isAdminMode =
+        typeof window !== "undefined" &&
+        document.cookie.includes("admin_mode_enabled=true");
+
+      // 2. Correção da lógica de 24 horas mitigando problemas de fuso horário (comparando milissegundos puros)
+      let calculatedCanUseAi =
+        freeAiQueriesUsedToday < 1 || purchasedAiQueries > 0;
+
+      if (lastAiQueryAt) {
+        const lastQueryTime = new Date(lastAiQueryAt).getTime();
+        const now = new Date().getTime();
+        const hoursPassed = (now - lastQueryTime) / (1000 * 60 * 60);
+
+        if (hoursPassed >= 24) {
+          calculatedCanUseAi = true;
+        }
+      }
+
       setAiQuota({
-        canUseAi: freeAiQueriesUsedToday < 1 || purchasedAiQueries > 0,
+        // 3. Se for Admin, canUseAi sempre será TRUE (Bypass Total do Cooldown)
+        canUseAi: isAdminMode ? true : calculatedCanUseAi,
         purchasedAiQueries,
         freeAiQueriesUsedToday,
         lastAiResponse,
@@ -355,11 +375,14 @@ export default function DashboardPage() {
                 </span>
               </span>
               <span className="hidden rounded-full bg-[var(--subbackground)] px-4 py-2 text-xs font-bold text-[var(--text)] transition group-hover:bg-[var(--primary)] group-hover:text-white sm:inline-flex">
-                {aiQuota.canUseAi
-                  ? aiQuota.purchasedAiQueries > 0
-                    ? `${aiQuota.purchasedAiQueries} extra${aiQuota.purchasedAiQueries > 1 ? "s" : ""}`
-                    : "1 grátis hoje"
-                  : "Limite diário"}
+                {/* Modificado para indicar acesso irrestrito se for Admin */}
+                {document.cookie.includes("admin_mode_enabled=true")
+                  ? "Admin: Liberado ⚡"
+                  : aiQuota.canUseAi
+                    ? aiQuota.purchasedAiQueries > 0
+                      ? `${aiQuota.purchasedAiQueries} extra${aiQuota.purchasedAiQueries > 1 ? "s" : ""}`
+                      : "1 grátis hoje"
+                    : "Limite diário"}
               </span>
             </button>
 
