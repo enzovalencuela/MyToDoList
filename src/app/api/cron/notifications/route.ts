@@ -6,8 +6,14 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 const AGENDA_LOOKAHEAD_MINUTES = 10;
-const TASK_DEADLINE_LOOKAHEAD_HOURS = 24;
 const INACTIVITY_HOURS = 48;
+
+function getBrasiliaDate() {
+  const agora = new Date();
+  return new Date(
+    agora.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }),
+  );
+}
 
 function isCronAuthorized(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -177,14 +183,14 @@ async function handleAgendaReminders(now: Date) {
 async function handleTaskDeadlines(now: Date) {
   const todayKey = getDateKey(now);
   const tomorrow = new Date(now);
-  tomorrow.setHours(now.getHours() + TASK_DEADLINE_LOOKAHEAD_HOURS);
+  tomorrow.setDate(now.getDate() + 1);
 
   const tasks = await prisma.tarefa.findMany({
     where: {
       estado_tarefa: { not: "Finalizada" },
       data_prazo: {
-        gte: new Date(`${todayKey}T12:00:00.000Z`),
-        lte: new Date(`${getDateKey(tomorrow)}T12:00:00.000Z`),
+        gte: new Date(`${todayKey}T00:00:00.000Z`),
+        lte: new Date(`${getDateKey(tomorrow)}T23:59:59.999Z`),
       },
       usuario: {
         pushSubscription: { not: null },
@@ -404,7 +410,7 @@ async function runNotificationCron(req: Request) {
     vapidConfig.privateKey,
   );
 
-  const now = new Date();
+  const now = getBrasiliaDate();
   const [agendaSent, deadlineSent, inactivitySent, streakProtection] =
     await Promise.all([
       handleAgendaReminders(now),
